@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+pydantic
+python-multipart
+scikit-learn
+joblib
+torch
+
+transformers
+psycopg2-binary
+django
+django-allauth
+djangorestframework

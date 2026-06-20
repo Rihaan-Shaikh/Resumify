@@ -1,0 +1,2896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Resumify — Professional Builder</title>
+
+<style>
+
+/* FONTS */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap');
+
+/* RESET */
+*
+{
+box-sizing:border-box;
+margin:0;
+padding:0;
+}
+
+/* BODY */
+body
+{
+font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+background-color: #0d0d0d;
+color: #ededed;
+height: 100vh;
+display: flex;
+flex-direction: column;
+}
+
+/* HEADER */
+header
+{
+padding: 16px 32px;
+font-size: 16px;
+font-weight: 600;
+background-color: #0a0a0a;
+border-bottom: 1px solid #222;
+display: flex;
+justify-content: space-between;
+align-items: center;
+letter-spacing: -0.01em;
+color: #ededed;
+}
+
+.auth-nav {
+display: flex;
+gap: 12px;
+align-items: center;
+}
+
+.auth-btn {
+padding: 8px 16px;
+border-radius: 6px;
+font-size: 13px;
+font-weight: 500;
+cursor: pointer;
+text-decoration: none;
+color: #ededed;
+border: 1px solid #333;
+background: #1a1a1a;
+transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.auth-btn:hover {
+background: #2a2a2a;
+border-color: #555;
+transform: translateY(-1px) scale(1.02);
+box-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 0 8px rgba(255,255,255,0.05);
+}
+
+.auth-btn:active {
+transform: translateY(0) scale(0.98);
+}
+
+.auth-btn-primary {
+background: #ededed;
+color: #000;
+border-color: #ededed;
+box-shadow: 0 4px 12px rgba(255,255,255,0.15);
+}
+
+.auth-btn-primary:hover {
+background: #fff;
+border-color: #fff;
+box-shadow: 0 6px 20px rgba(255,255,255,0.25);
+}
+
+.auth-user {
+font-size: 13px;
+color: #a1a1aa;
+margin-right: 8px;
+}
+
+/* MAIN */
+.main
+{
+flex: 1;
+display: flex;
+padding: 32px;
+gap: 32px;
+max-width: 1600px;
+margin: 0 auto;
+width: 100%;
+}
+
+/* PANELS */
+.left, .right
+{
+flex: 1;
+overflow-y: auto;
+display: flex;
+flex-direction: column;
+gap: 24px;
+padding-right: 8px;
+}
+
+/* SCROLLBARS */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; border: 2px solid #0d0d0d; }
+::-webkit-scrollbar-thumb:hover { background: #555; }
+
+/* CARDS */
+.card
+{
+background-color: rgba(20, 20, 20, 0.7);
+backdrop-filter: blur(12px);
+-webkit-backdrop-filter: blur(12px);
+border-radius: 10px;
+padding: 24px;
+border: 1px solid rgba(255, 255, 255, 0.05);
+box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+animation: slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.card:hover {
+transform: translateY(-4px);
+box-shadow: 0 12px 30px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08);
+}
+
+@keyframes slideInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.left .card:nth-child(1) { animation-delay: 0.05s; }
+.left .card:nth-child(2) { animation-delay: 0.1s; }
+.left .card:nth-child(3) { animation-delay: 0.15s; }
+.left .card:nth-child(4) { animation-delay: 0.2s; }
+.left .card:nth-child(5) { animation-delay: 0.25s; }
+.left .card:nth-child(6) { animation-delay: 0.3s; }
+.left .card:nth-child(7) { animation-delay: 0.35s; }
+.left .card:nth-child(8) { animation-delay: 0.4s; }
+
+.right .card:nth-child(1) { animation-delay: 0.15s; }
+.right .card:nth-child(2) { animation-delay: 0.25s; }
+.right .card:nth-child(3) { animation-delay: 0.35s; }
+.right .card:nth-child(4) { animation-delay: 0.45s; }
+
+/* TITLES */
+h3
+{
+margin-bottom: 20px;
+color: #ededed;
+font-size: 14px;
+font-weight: 600;
+letter-spacing: 0.02em;
+text-transform: uppercase;
+}
+
+/* INPUTS */
+input, textarea
+{
+width: 100%;
+padding: 12px 16px;
+margin-bottom: 14px;
+background-color: rgba(5, 5, 5, 0.6);
+border: 1px solid #2a2a2a;
+border-radius: 8px;
+color: #ededed;
+outline: none;
+font-size: 14px;
+font-family: inherit;
+transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+input:focus, textarea:focus
+{
+border-color: #666;
+background-color: rgba(10, 10, 10, 0.8);
+box-shadow: 0 0 0 3px rgba(255,255,255,0.05);
+transform: translateY(-1px);
+}
+
+input::placeholder, textarea::placeholder {
+color: #666;
+}
+
+textarea {
+min-height: 80px;
+resize: vertical;
+}
+
+/* BUTTONS */
+button
+{
+padding: 10px 18px;
+margin: 0 10px 14px 0;
+background-color: #1a1a1a;
+border: 1px solid #333;
+border-radius: 8px;
+color: #ededed;
+font-size: 13px;
+font-weight: 500;
+cursor: pointer;
+transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+display: inline-flex;
+align-items: center;
+justify-content: center;
+box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+button:hover
+{
+background-color: #2a2a2a;
+border-color: #555;
+transform: translateY(-2px) scale(1.02);
+box-shadow: 0 6px 16px rgba(0,0,0,0.4), 0 0 12px rgba(255,255,255,0.05);
+}
+
+button:active {
+transform: translateY(0) scale(0.98);
+}
+
+.button-primary {
+background-color: #ededed;
+color: #000;
+border-color: #ededed;
+box-shadow: 0 4px 12px rgba(255,255,255,0.15);
+}
+
+.button-primary:hover {
+background-color: #fff;
+border-color: #fff;
+box-shadow: 0 6px 20px rgba(255,255,255,0.25);
+}
+
+/* LATEX OUTPUT */
+pre
+{
+background-color: #050505;
+padding: 20px;
+border-radius: 6px;
+font-size: 13px;
+border: 1px solid #222;
+overflow: auto;
+max-height: 480px;
+color: #a1a1aa;
+font-family: 'JetBrains Mono', 'Menlo', monospace;
+line-height: 1.5;
+}
+
+/* AI FEEDBACK UI */
+.spinner {
+width: 24px;
+height: 24px;
+border: 3px solid rgba(255, 255, 255, 0.1);
+border-top: 3px solid #ededed;
+border-radius: 50%;
+animation: spin 1s linear infinite;
+display: inline-block;
+}
+@keyframes spin {
+0% { transform: rotate(0deg); }
+100% { transform: rotate(360deg); }
+}
+
+.progress-bg {
+background-color: #222;
+height: 6px;
+border-radius: 3px;
+width: 100%;
+overflow: hidden;
+margin-top: 6px;
+}
+.progress-fill {
+height: 100%;
+border-radius: 3px;
+transition: width 0.5s ease-out;
+}
+
+.badge {
+padding: 4px 8px;
+border-radius: 4px;
+font-size: 11px;
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 0.05em;
+display: inline-block;
+}
+.badge.strong {
+background: rgba(16, 185, 129, 0.1);
+color: #10b981;
+border: 1px solid rgba(16, 185, 129, 0.2);
+}
+.badge.weak {
+background: rgba(239, 68, 68, 0.1);
+color: #ef4444;
+border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.btn-icon {
+background: #1a1a1a;
+border: 1px solid #333;
+padding: 6px 12px;
+border-radius: 4px;
+color: #a1a1aa;
+font-size: 12px;
+cursor: pointer;
+transition: all 0.15s ease;
+display: flex;
+align-items: center;
+gap: 6px;
+margin: 0;
+}
+.btn-icon:hover {
+background: #2a2a2a;
+color: #ededed;
+border-color: #444;
+}
+
+/* MODAL */
+.modal
+{
+display: none;
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: rgba(0, 0, 0, 0.85);
+backdrop-filter: blur(8px);
+-webkit-backdrop-filter: blur(8px);
+justify-content: center;
+align-items: center;
+z-index: 1000;
+animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.modal-content
+{
+background: #0d0d0d;
+color: #ededed;
+padding: 36px;
+border-radius: 14px;
+border: 1px solid rgba(255, 255, 255, 0.08);
+width: 60%;
+max-width: 800px;
+max-height: 85vh;
+overflow-y: auto;
+box-shadow: 0 24px 50px rgba(0,0,0,0.6), 0 0 80px rgba(255,255,255,0.02);
+animation: modalContentSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes modalContentSlideUp {
+    from { opacity: 0; transform: translateY(24px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.close
+{
+float: right;
+font-size: 24px;
+cursor: pointer;
+color: #666;
+transition: color 0.15s ease;
+line-height: 1;
+}
+
+.close:hover {
+color: #ededed;
+}
+
+/* TOAST NOTIFICATIONS */
+#toast-container {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+}
+
+.toast {
+    background: #1a1a1a;
+    color: #ededed;
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    border: 1px solid #333;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast.success { border-left: 4px solid #10b981; box-shadow: 0 0 16px rgba(16, 185, 129, 0.1); }
+.toast.error { border-left: 4px solid #ef4444; box-shadow: 0 0 16px rgba(239, 68, 68, 0.1); }
+.toast.info { border-left: 4px solid #3b82f6; box-shadow: 0 0 16px rgba(59, 130, 246, 0.1); }
+
+/* RESUME CARDS */
+.resume-card {
+    background: rgba(5, 5, 5, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid #222;
+    border-radius: 10px;
+    padding: 18px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.resume-card:hover {
+    border-color: #555;
+    background: rgba(15, 15, 15, 0.8);
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 12px rgba(255,255,255,0.03);
+}
+
+.resume-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.resume-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #ededed;
+}
+
+.resume-card-email {
+    font-size: 12px;
+    color: #a1a1aa;
+}
+
+.resume-card-preview {
+    font-size: 12px;
+    color: #666;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.resume-card-btn {
+    align-self: flex-start;
+    margin: 8px 0 0 0 !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+}
+
+/* DASHBOARD STYLES */
+.dashboard-card {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 12px 0 0 0;
+    margin-bottom: 0;
+    box-shadow: none;
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* TABS NAV */
+.tabs-nav {
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid #222;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+}
+
+.tab-link {
+    font-size: 13px;
+    font-weight: 500;
+    color: #a1a1aa;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+}
+
+.tab-link:hover {
+    color: #ededed;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.tab-link.active {
+    color: #ededed;
+    background: #1a1a1a;
+    border-color: #333;
+    font-weight: 600;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 16px;
+}
+
+.dashboard-score-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.dashboard-score-num {
+    font-size: 52px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+.dashboard-score-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #a1a1aa;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.dashboard-level-badge {
+    padding: 6px 14px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-level-excellent {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.dashboard-level-good {
+    background: rgba(234, 179, 8, 0.15);
+    color: #eab308;
+    border: 1px solid rgba(234, 179, 8, 0.25);
+}
+
+.dashboard-level-needs-improvement {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.dashboard-progress-container {
+    margin-bottom: 24px;
+}
+
+.dashboard-progress-bg {
+    background: #1f1f23;
+    height: 12px;
+    border-radius: 9999px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dashboard-progress-fill {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.dashboard-progress-excellent {
+    background: linear-gradient(90deg, #10b981, #34d399, #059669);
+}
+
+.dashboard-progress-good {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24, #d97706);
+}
+
+.dashboard-progress-needs-improvement {
+    background: linear-gradient(90deg, #ef4444, #f87171, #dc2626);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.dashboard-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #ededed;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dashboard-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dashboard-list-item {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #a1a1aa;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.dashboard-list-item strong {
+    color: #ededed;
+}
+
+.dashboard-icon-check {
+    color: #10b981;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.dashboard-icon-bullet {
+    color: #eab308;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+/* ATS SCORE CARD STYLES */
+.ats-card {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 12px 0 0 0;
+    margin-top: 0;
+    box-shadow: none;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.ats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ats-score-display {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.ats-score-number {
+    font-size: 44px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+.ats-score-suffix {
+    font-size: 18px;
+    color: #555;
+    font-weight: 500;
+}
+
+.ats-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    color: #a1a1aa;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ats-status-badge {
+    padding: 5px 12px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.ats-status-excellent {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.ats-status-good {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.ats-status-fair {
+    background: rgba(234, 179, 8, 0.12);
+    color: #eab308;
+    border: 1px solid rgba(234, 179, 8, 0.2);
+}
+
+.ats-status-needs-improvement {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.ats-progress-bg {
+    background: #1f1f23;
+    height: 10px;
+    border-radius: 9999px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.ats-progress-fill {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite;
+}
+
+.ats-progress-excellent { background: linear-gradient(90deg, #10b981, #34d399, #059669); }
+.ats-progress-good { background: linear-gradient(90deg, #3b82f6, #60a5fa, #2563eb); }
+.ats-progress-fair { background: linear-gradient(90deg, #f59e0b, #fbbf24, #d97706); }
+.ats-progress-needs-improvement { background: linear-gradient(90deg, #ef4444, #f87171, #dc2626); }
+
+.ats-sections {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+.ats-section {
+    background: rgba(5, 5, 5, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.ats-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ats-section-title.strengths { color: #10b981; }
+.ats-section-title.issues { color: #ef4444; }
+.ats-section-title.recommendations { color: #8b5cf6; }
+
+.ats-item {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #a1a1aa;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 0;
+}
+
+.ats-item + .ats-item {
+    border-top: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.ats-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+    font-size: 12px;
+}
+
+.ats-dual-scores {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+    .ats-dual-scores {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ats-score-tile {
+    background: rgba(5, 5, 5, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* TEMPLATE PICKER MODAL SPECIFIC OVERRIDES */
+#templateModal .modal-content {
+    width: 80%;
+    max-width: 900px;
+    max-height: 90vh;
+}
+
+@media (max-width: 768px) {
+    #templateModal .modal-content {
+        width: 95%;
+        padding: 20px;
+    }
+    #templateModal .modal-content > div {
+        grid-template-columns: 1fr !important;
+        gap: 16px;
+    }
+}
+
+.templates-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 10px;
+}
+
+/* TEMPLATE CARDS */
+.template-card {
+    background: rgba(15, 15, 15, 0.6);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.template-card:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(25, 25, 25, 0.8);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 0 16px rgba(255, 255, 255, 0.02);
+}
+
+.template-card.active {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.03);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.1), inset 0 0 12px rgba(16, 185, 129, 0.05);
+}
+
+.template-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.template-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ededed;
+}
+
+.template-category-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* HARMONIOUS BADGE COLORS */
+.badge-academic {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.badge-professional {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.badge-creative {
+    background: rgba(236, 72, 153, 0.1);
+    color: #ec4899;
+    border: 1px solid rgba(236, 72, 153, 0.2);
+}
+
+.badge-technical {
+    background: rgba(139, 92, 246, 0.1);
+    color: #8b5cf6;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.template-card-description {
+    font-size: 12px;
+    color: #a1a1aa;
+    line-height: 1.4;
+}
+
+.template-card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    align-items: center;
+}
+
+.template-btn {
+    padding: 8px 16px;
+    font-size: 12px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,0.08);
+    color: #ededed;
+    transition: all 0.2s ease;
+    margin: 0;
+}
+
+.template-btn:hover {
+    background: #252525;
+    border-color: rgba(255,255,255,0.2);
+    transform: translateY(-1px);
+}
+
+.template-btn-primary {
+    background: #ededed;
+    color: #000;
+    border-color: #ededed;
+}
+
+.template-btn-primary:hover {
+    background: #fff;
+    border-color: #fff;
+}
+
+.template-btn-active {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.2);
+    cursor: default;
+}
+
+.template-btn-active:hover {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.2);
+    transform: none;
+}
+
+.favorite-btn {
+    background: transparent;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    color: #555;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    box-shadow: none;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.favorite-btn:hover {
+    transform: scale(1.15);
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.favorite-btn.is-favorite {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.25);
+    animation: heartPulse 0.4s ease-out;
+}
+
+@keyframes heartPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+
+@media (max-width: 1200px) {
+    .main {
+        flex-direction: column;
+    }
+}
+
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline: 2px solid #10b981;
+    outline-offset: 2.5px;
+}
+</style>
+
+</head>
+
+<body>
+
+<header>
+    <div>Resumify — Editor</div>
+    <div class="auth-nav" id="authNav"></div>
+</header>
+
+<div class="main">
+
+
+<!-- LEFT PANEL -->
+<div class="left">
+
+    <div class="card">
+        <h3>Basic Info</h3>
+        <input id="name" placeholder="Full Name" aria-label="Full Name">
+        <input id="email" placeholder="Email" aria-label="Email Address">
+        <input id="phone" placeholder="Phone" aria-label="Phone Number">
+        <input id="linkedin" placeholder="LinkedIn URL" aria-label="LinkedIn URL">
+    </div>
+
+    <div class="card">
+        <h3>Education</h3>
+        <div id="educationContainer"></div>
+        <button onclick="addEducation()">+ Add Education</button>
+    </div>
+
+    <div class="card">
+        <h3>Experience</h3>
+        <div id="experienceContainer"></div>
+        <button onclick="addExperience()">+ Add Experience</button>
+    </div>
+
+    <div class="card">
+        <h3>Skills</h3>
+        <textarea id="skills" placeholder="Languages, Frameworks, Tools..." aria-label="Skills & Languages"></textarea>
+    </div>
+
+    <div class="card">
+        <h3>Projects</h3>
+        <div id="projectContainer"></div>
+        <button onclick="addProject()">+ Add Project</button>
+    </div>
+
+    <div class="card">
+        <h3>Certifications</h3>
+        <div id="certificationsContainer"></div>
+        <button onclick="addCertifications()">+ Add Certification</button>
+    </div>
+
+    <div class="card">
+        <h3>Achievements</h3>
+        <div id="achievementsContainer"></div>
+        <button onclick="addAchievements()">+ Add Achievement</button>
+    </div>
+
+    <div class="card">
+        <h3>Languages</h3>
+        <div id="languagesContainer"></div>
+        <button onclick="addLanguages()">+ Add Language</button>
+    </div>
+
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="right">
+
+    <div class="card">
+        <h3>Actions</h3>
+        <button onclick="previewResume()">Preview</button>
+        <button onclick="copyLatex(this)">Copy LaTeX</button>
+        <button onclick="downloadTex()">Download TEX</button>
+        <button onclick="downloadPDF()">Download PDF</button>
+        <button onclick="validateResume()">Validate Resume</button>
+        <button onclick="getAIFeedback()" class="button-primary">✨ AI Feedback</button>
+        <div style="height: 12px; width: 100%;"></div>
+        <button onclick="loadSampleData()" style="width: calc(50% - 6px); margin-right: 8px; border: 1px dashed #333; color: #a1a1aa; background: transparent;">Load Sample</button>
+        <button onclick="clearForm()" style="width: calc(50% - 6px); margin-right: 0; border: 1px dashed rgba(239, 68, 68, 0.4); color: #ef4444; background: rgba(239, 68, 68, 0.05);">Clear Form</button>
+        
+        <!-- Compact Template Section -->
+        <div style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 13px; color: #a1a1aa; display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; color: #666;">Current Template</span>
+                <span id="currentTemplateName" style="color: #ededed; font-weight: 500;">Harvard Resume</span>
+            </div>
+            <button onclick="openTemplateModal()" style="margin: 0; padding: 6px 12px; font-size: 12px; border-color: #444; background: #1a1a1a;">Choose Template</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Cloud Storage</h3>
+        <button onclick="saveResume()" style="background-color: #2563eb; color: #fff; border-color: #1d4ed8;">☁ Save to Cloud</button>
+        <button onclick="fetchResumes()">☁ Load Resumes</button>
+    </div>
+
+    <div class="card">
+        <h3>My Resumes</h3>
+        <div id="cloudResumesList" style="max-height: 360px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 4px;">
+            <p style="color:#666; font-size: 14px;">Click "Load Resumes" to fetch your saved resumes.</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>LaTeX Source</h3>
+        <pre id="output"></pre>
+    </div>
+
+    <div class="card">
+        <h3 id="aiHeader">AI Analysis</h3>
+        <div id="validationResult" style="display: none; margin-bottom: 16px; padding: 12px 16px; border-radius: 6px; background: #050505; border: 1px solid #222; font-size: 14px; font-weight: 500;"></div>
+        
+        <!-- TABS NAVIGATION -->
+        <div class="tabs-nav" id="aiTabsNav" style="display: none;">
+            <div class="tab-link active" onclick="switchAITab('insights')">AI Insights</div>
+            <div class="tab-link" onclick="switchAITab('ats')">ATS Score Insights</div>
+        </div>
+        
+        <div id="aiScoreContainer" style="margin-bottom: 16px;"></div>
+        <div id="aiFeedbackContainer"><p style="color:#666; font-size: 14px;">Run AI Feedback to analyze project impact and phrasing.</p></div>
+    </div>
+
+</div>
+
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal">
+
+<div class="modal-content">
+
+<span class="close" onclick="closeModal()">✖</span>
+
+<div id="resumePreview"></div>
+
+</div>
+
+</div>
+
+<!-- TEMPLATE PICKER MODAL -->
+<div id="templateModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeTemplateModal()">✖</span>
+        <h3 style="margin-bottom: 24px; font-size: 16px; text-transform: uppercase; letter-spacing: 0.05em;">Select Resume Template</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+            <div>
+                <h4 style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: #a1a1aa; border-bottom: 1px solid #222; padding-bottom: 8px; margin-bottom: 16px; letter-spacing: 0.05em;">Template Library</h4>
+                <div id="templateLibraryList" class="templates-list-container">
+                    <p style="color:#666; font-size: 13px;">Loading templates...</p>
+                </div>
+            </div>
+            <div>
+                <h4 style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: #a1a1aa; border-bottom: 1px solid #222; padding-bottom: 8px; margin-bottom: 16px; letter-spacing: 0.05em;">My Collection</h4>
+                <div id="myTemplatesList" class="templates-list-container">
+                    <p style="color:#666; font-size: 13px;">Please login to see your saved templates.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+/* ============================================================
+ * DEPLOYMENT CONFIGURATION
+ * ============================================================
+ * To deploy to production, replace the URLs below with your
+ * live server domains. All API calls in this file reference
+ * this CONFIG object — no other URLs need to be changed.
+ *
+ * Example production values:
+ *   FASTAPI_BASE_URL: "https://api.resumify.example.com"
+ *   DJANGO_BASE_URL:  "https://auth.resumify.example.com"
+ *   FRONTEND_URL:     "https://resumify.example.com"
+ * ============================================================ */
+const CONFIG = {
+    // FastAPI backend — handles /resume and /analyze endpoints
+    FASTAPI_BASE_URL: "http://127.0.0.1:8000",
+
+    // Django backend — handles authentication & cloud storage
+    DJANGO_BASE_URL: "http://127.0.0.1:8001",
+
+    // Frontend origin — used in auth redirects (login/signup ?next= parameter)
+    FRONTEND_URL: "http://127.0.0.1:5500"
+};
+
+function escapeHTML(str) {
+    if (!str) return "";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+/* GLOBAL LATEX */
+let latex="";
+
+/* GLOBAL TEMPLATES STATE */
+let isLoggedIn = false;
+let publicTemplates = [];
+let myTemplates = [];
+let activeTemplate = null;
+
+const DEFAULT_LATEX_TEMPLATE = `\\documentclass[11pt,a4paper]{article}
+\\usepackage[margin=0.75in]{geometry}
+\\usepackage{titlesec}
+\\usepackage{enumitem}
+\\usepackage{hyperref}
+
+% Harvard Style Formatting Tweaks
+\\titleformat{\\section}{\\large\\bfseries\\uppercase}{}{0em}{}[\\titlerule]
+\\titlespacing{\\section}{0pt}{12pt}{8pt}
+\\setlist[itemize]{leftmargin=0.2in, label={$\\bullet$}, itemsep=0pt, parsep=2pt, topsep=2pt}
+
+\\begin{document}
+
+% --- HEADER ---
+\\begin{center}
+{\\Huge \\textbf{[[NAME]]}} \\vspace{4pt} \\\\
+[[EMAIL]] \\quad|\\quad [[PHONE]] \\quad|\\quad [[LINKEDIN]]
+\\end{center}
+
+[[EXPERIENCE]]
+[[EDUCATION]]
+[[PROJECTS]]
+[[SKILLS]]
+[[CERTIFICATIONS]]
+[[ADDITIONAL]]
+
+\\end{document}`;
+
+/* TEMPLATES API & RENDERING */
+async function fetchTemplates() {
+    const listDiv = document.getElementById("templateLibraryList");
+    try {
+        const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/templates/`);
+        if (response.ok) {
+            publicTemplates = await response.json();
+            renderTemplates();
+        } else {
+            listDiv.innerHTML = "<p style='color:#ef4444; font-size: 13px;'>Failed to load templates.</p>";
+        }
+    } catch (e) {
+        listDiv.innerHTML = "<p style='color:#ef4444; font-size: 13px;'>Server connection failed.</p>";
+    }
+}
+
+async function fetchMyTemplates() {
+    const listDiv = document.getElementById("myTemplatesList");
+    if (!isLoggedIn) {
+        listDiv.innerHTML = "<p style='color:#666; font-size: 13px;'>Please login to see your saved templates.</p>";
+        return;
+    }
+    try {
+        const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/my-templates/`, {
+            credentials: "include"
+        });
+        if (response.ok) {
+            myTemplates = await response.json();
+            renderMyTemplates();
+        } else {
+            listDiv.innerHTML = "<p style='color:#ef4444; font-size: 13px;'>Failed to load saved templates.</p>";
+        }
+    } catch (e) {
+        listDiv.innerHTML = "<p style='color:#ef4444; font-size: 13px;'>Server connection failed.</p>";
+    }
+}
+
+function renderTemplates() {
+    const listDiv = document.getElementById("templateLibraryList");
+    if (publicTemplates.length === 0) {
+        listDiv.innerHTML = "<p style='color:#666; font-size: 13px;'>No public templates available.</p>";
+        return;
+    }
+    listDiv.innerHTML = "";
+    
+    // Filter templates to hide the ones in My Collection (if logged in)
+    const displayTemplates = isLoggedIn
+        ? publicTemplates.filter(t => !myTemplates.some(mt => mt.template === t.id))
+        : publicTemplates;
+        
+    if (displayTemplates.length === 0) {
+        listDiv.innerHTML = "<p style='color:#666; font-size: 13px; text-align: center; padding: 24px 0;'>All templates added to collection!</p>";
+        return;
+    }
+
+    displayTemplates.forEach(t => {
+        const savedTemplate = myTemplates.find(mt => mt.template === t.id);
+        const isFav = savedTemplate ? savedTemplate.favorite : false;
+        
+        const card = document.createElement("div");
+        card.className = `template-card ${activeTemplate && Number(activeTemplate.id) === Number(t.id) ? 'active' : ''}`;
+        
+        let badgeClass = "badge-professional";
+        const cat = t.category.toLowerCase();
+        if (cat.includes("academic") || cat.includes("classic")) badgeClass = "badge-academic";
+        else if (cat.includes("creative") || cat.includes("minimal")) badgeClass = "badge-creative";
+        else if (cat.includes("tech")) badgeClass = "badge-technical";
+
+        card.innerHTML = `
+            <div class="template-card-header">
+                <span class="template-card-title">${t.name}</span>
+                <span class="template-category-badge ${badgeClass}">${t.category}</span>
+            </div>
+            <p class="template-card-description">${t.description}</p>
+            <div class="template-card-actions">
+                ${activeTemplate && Number(activeTemplate.id) === Number(t.id)
+                    ? `<button class="template-btn template-btn-active">In Use</button>`
+                    : isLoggedIn
+                        ? `<button class="template-btn" onclick="saveTemplate(${t.id})">Add to Collection</button>`
+                        : `<button class="template-btn template-btn-primary" onclick="useTemplate(${t.id})">Use Template</button>`
+                }
+                <button class="favorite-btn ${isFav ? 'is-favorite' : ''}" onclick="toggleFavorite(${t.id})" title="Favorite">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                </button>
+            </div>
+        `;
+        listDiv.appendChild(card);
+    });
+}
+
+function renderMyTemplates() {
+    const listDiv = document.getElementById("myTemplatesList");
+    if (myTemplates.length === 0) {
+        listDiv.innerHTML = "<p style='color:#666; font-size: 13px;'>No templates in your collection.</p>";
+        return;
+    }
+    listDiv.innerHTML = "";
+    myTemplates.forEach(mt => {
+        const t = mt.template_details;
+        if (!t) return;
+        
+        const card = document.createElement("div");
+        card.className = `template-card ${activeTemplate && Number(activeTemplate.id) === Number(t.id) ? 'active' : ''}`;
+        
+        let badgeClass = "badge-professional";
+        const cat = t.category.toLowerCase();
+        if (cat.includes("academic") || cat.includes("classic")) badgeClass = "badge-academic";
+        else if (cat.includes("creative") || cat.includes("minimal")) badgeClass = "badge-creative";
+        else if (cat.includes("tech")) badgeClass = "badge-technical";
+
+        card.innerHTML = `
+            <div class="template-card-header">
+                <span class="template-card-title">${t.name}</span>
+                <span class="template-category-badge ${badgeClass}">${t.category}</span>
+            </div>
+            <p class="template-card-description">${t.description || ''}</p>
+            <div class="template-card-actions">
+                ${activeTemplate && Number(activeTemplate.id) === Number(t.id)
+                    ? `<button class="template-btn template-btn-active">In Use</button>`
+                    : `<button class="template-btn template-btn-primary" onclick="useTemplate(${t.id})">Use Template</button>`
+                }
+                <button class="favorite-btn ${mt.favorite ? 'is-favorite' : ''}" onclick="toggleFavorite(${t.id})" title="Favorite">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                </button>
+            </div>
+        `;
+        listDiv.appendChild(card);
+    });
+}
+
+async function saveTemplate(id) {
+    if (!isLoggedIn) {
+        showToast("Please login to save templates", "error");
+        return;
+    }
+    showToast("Saving template...", "info");
+    try {
+        const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/templates/save/${id}/`, {
+            method: "POST",
+            credentials: "include"
+        });
+        if (response.ok) {
+            showToast("Template added to your collection", "success");
+            await fetchMyTemplates();
+            renderTemplates();
+        } else {
+            showToast("Failed to save template", "error");
+        }
+    } catch (e) {
+        showToast("Server connection failed", "error");
+    }
+}
+
+async function toggleFavorite(id) {
+    if (!isLoggedIn) {
+        showToast("Please login to favorite templates", "error");
+        return;
+    }
+    try {
+        const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/templates/favorite/${id}/`, {
+            method: "POST",
+            credentials: "include"
+        });
+        if (response.ok) {
+            const data = await response.json();
+            showToast(data.favorite ? "Template added to your collection" : "Template unfavorited", "success");
+            await fetchMyTemplates();
+            renderTemplates();
+        } else {
+            showToast("Failed to toggle favorite", "error");
+        }
+    } catch (e) {
+        showToast("Server connection failed", "error");
+    }
+}
+
+async function useTemplate(id) {
+    let template = publicTemplates.find(t => Number(t.id) === Number(id));
+    if (!template) {
+        const myTemp = myTemplates.find(mt => mt.template_details && Number(mt.template_details.id) === Number(id));
+        if (myTemp) {
+            template = myTemp.template_details;
+        }
+    }
+    if (!template) return;
+    activeTemplate = template;
+    
+    // Save to local storage for guest fallback
+    localStorage.setItem("resumify_selected_template_id", id);
+    
+    // If authenticated, sync with backend (Django)
+    if (isLoggedIn) {
+        try {
+            await fetch(`${CONFIG.DJANGO_BASE_URL}/api/me/selected-template/`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ template_id: id }),
+                credentials: "include"
+            });
+        } catch (e) {
+            console.error("Failed to sync template with backend", e);
+        }
+    }
+    
+    // Update displayed current template name
+    const templateNameSpan = document.getElementById("currentTemplateName");
+    if (templateNameSpan) templateNameSpan.innerText = template.name;
+    
+    showToast(`Using ${template.name}`, "success");
+    renderTemplates();
+    renderMyTemplates();
+    updateLatex();
+    closeTemplateModal();
+}
+
+async function loadSelectedTemplate() {
+    let loadedTemplate = null;
+    
+    if (isLoggedIn) {
+        try {
+            const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/me/selected-template/`, {
+                method: "GET",
+                credentials: "include"
+            });
+            if (response.ok) {
+                loadedTemplate = await response.json();
+            }
+        } catch (e) {
+            console.error("Failed to load selected template from backend", e);
+        }
+    }
+    
+    if (loadedTemplate) {
+        activeTemplate = loadedTemplate;
+        localStorage.setItem("resumify_selected_template_id", loadedTemplate.id);
+    } else {
+        // Fallback to local storage
+        const savedId = localStorage.getItem("resumify_selected_template_id");
+        if (savedId) {
+            let template = publicTemplates.find(t => Number(t.id) === Number(savedId));
+            if (!template) {
+                const myTemp = myTemplates.find(mt => mt.template_details && Number(mt.template_details.id) === Number(savedId));
+                if (myTemp) {
+                    template = myTemp.template_details;
+                }
+            }
+            if (template) {
+                activeTemplate = template;
+            }
+        }
+    }
+    
+    // Update UI
+    if (activeTemplate) {
+        const templateNameSpan = document.getElementById("currentTemplateName");
+        if (templateNameSpan) templateNameSpan.innerText = activeTemplate.name;
+        renderTemplates();
+        renderMyTemplates();
+        updateLatex();
+    }
+}
+
+
+/* UX FEATURES: LOCALSTORAGE & TOAST */
+function showToast(message, type = "info") {
+    let container = document.getElementById("toast-container");
+    if(!container) {
+        container = document.createElement("div");
+        container.id = "toast-container";
+        document.body.appendChild(container);
+    }
+    
+    const t = document.createElement("div");
+    t.className = `toast ${type}`;
+    t.innerText = message;
+    
+    container.appendChild(t);
+    
+    requestAnimationFrame(() => {
+        t.classList.add("show");
+    });
+    
+    setTimeout(() => {
+        t.classList.remove("show");
+        setTimeout(() => t.remove(), 300);
+    }, 3000);
+}
+
+function saveDraft() {
+    const data = {
+        name: get("name"), email: get("email"), phone: get("phone"), linkedin: get("linkedin"), skills: get("skills"), 
+        education: extractList("#educationContainer input"), experience: extractList("#experienceContainer input"), 
+        projects: extractList("#projectContainer input"), certifications: extractList("#certificationsContainer input"),
+        achievements: extractList("#achievementsContainer input"), languages: extractList("#languagesContainer input")
+    };
+    localStorage.setItem("resumify_draft", JSON.stringify(data));
+    showToast("Draft Saved ✓", "success");
+}
+
+let saveTimeout;
+document.addEventListener("input", (e) => {
+    // Only save draft if user is typing in form (not modal)
+    if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(saveDraft, 1500);
+    }
+});
+
+function appendInputs(containerId, values, addFunc) {
+    const c = document.getElementById(containerId);
+    c.innerHTML = "";
+    if (values && values.length > 0) {
+        values.forEach(v => {
+            addFunc();
+            c.lastElementChild.value = v;
+        });
+    } else {
+        addFunc();
+    }
+}
+
+function loadDraft() {
+    const draft = localStorage.getItem("resumify_draft");
+    if(!draft) return false;
+    try {
+        const data = JSON.parse(draft);
+        document.getElementById("name").value = data.name || "";
+        document.getElementById("email").value = data.email || "";
+        document.getElementById("phone").value = data.phone || "";
+        document.getElementById("linkedin").value = data.linkedin || "";
+        document.getElementById("skills").value = data.skills || "";
+        appendInputs("educationContainer", data.education, addEducation);
+        appendInputs("experienceContainer", data.experience, addExperience);
+        appendInputs("projectContainer", data.projects, addProject);
+        appendInputs("certificationsContainer", data.certifications, addCertifications);
+        appendInputs("achievementsContainer", data.achievements, addAchievements);
+        appendInputs("languagesContainer", data.languages, addLanguages);
+        return true;
+    } catch(e) { return false; }
+}
+
+/* INIT */
+window.onload=function()
+{
+checkAuthStatus();
+if (!loadDraft()) {
+addEducation();
+addExperience();
+addProject();
+addCertifications();
+addAchievements();
+addLanguages();
+}
+updateLatex();
+};
+
+/* LOAD SAMPLE DATA */
+function loadSampleData() {
+    document.getElementById("name").value = "Jane Doe";
+    document.getElementById("email").value = "jane.doe@example.com";
+    document.getElementById("phone").value = "+1 (555) 123-4567";
+    document.getElementById("linkedin").value = "linkedin.com/in/janedoe";
+    document.getElementById("skills").value = "Python, JavaScript, React, Node.js, SQL, Machine Learning";
+    
+    appendInputs("educationContainer", ["B.S. in Computer Science, State University, 2018 - 2022"], addEducation);
+    appendInputs("experienceContainer", [
+        "Software Engineer, Tech Solutions Inc, 2022 - Present",
+        "Frontend Intern, Web Studio, 2021 - 2022"
+    ], addExperience);
+    appendInputs("projectContainer", [
+        "E-Commerce Dashboard: Developed full-stack inventory management resolving 50% delay",
+        "AI Chatbot: Integrated OpenAI API for customer service automation"
+    ], addProject);
+    appendInputs("certificationsContainer", ["AWS Solutions Architect Associate, Amazon, 2023"], addCertifications);
+    appendInputs("achievementsContainer", ["1st Place, Global Hackathon 2022"], addAchievements);
+    appendInputs("languagesContainer", ["English - Native", "Spanish - Conversational"], addLanguages);
+    
+    updateLatex();
+    saveDraft();
+    showToast("Sample Data Loaded ✓", "success");
+}
+
+/* CLEAR FORM */
+function clearForm() {
+    if(!confirm("Are you sure you want to clear all fields?")) return;
+    document.getElementById("name").value = "";
+    document.getElementById("email").value = "";
+    document.getElementById("phone").value = "";
+    document.getElementById("linkedin").value = "";
+    document.getElementById("skills").value = "";
+    
+    appendInputs("educationContainer", [], addEducation);
+    appendInputs("experienceContainer", [], addExperience);
+    appendInputs("projectContainer", [], addProject);
+    appendInputs("certificationsContainer", [], addCertifications);
+    appendInputs("achievementsContainer", [], addAchievements);
+    appendInputs("languagesContainer", [], addLanguages);
+    
+    updateLatex();
+    localStorage.removeItem("resumify_draft");
+    showToast("Form Cleared", "info");
+}
+
+/* ADD SECTIONS */
+function addEducation() {
+    let input=document.createElement("input");
+    input.placeholder="Degree, College, Year";
+    input.setAttribute("aria-label", "Education Entry");
+    input.oninput=updateLatex;
+    document.getElementById("educationContainer").appendChild(input);
+}
+
+function addExperience() {
+    let input=document.createElement("input");
+    input.placeholder="Company, Role, Dates";
+    input.setAttribute("aria-label", "Experience Entry");
+    input.oninput=updateLatex;
+    document.getElementById("experienceContainer").appendChild(input);
+}
+
+function addProject() {
+    let input=document.createElement("input");
+    input.placeholder="Project Description (e.g., Architected a scalable API...)";
+    input.setAttribute("aria-label", "Project Description");
+    input.oninput=updateLatex;
+    document.getElementById("projectContainer").appendChild(input);
+}
+
+function addCertifications() {
+    let input=document.createElement("input");
+    input.placeholder="Certification Name, Organization, Year";
+    input.setAttribute("aria-label", "Certification Entry");
+    input.oninput=updateLatex;
+    document.getElementById("certificationsContainer").appendChild(input);
+}
+
+function addAchievements() {
+    let input=document.createElement("input");
+    input.placeholder="Achievement Description (e.g., 1st place in Hackathon)";
+    input.setAttribute("aria-label", "Achievement Entry");
+    input.oninput=updateLatex;
+    document.getElementById("achievementsContainer").appendChild(input);
+}
+
+function addLanguages() {
+    let input=document.createElement("input");
+    input.placeholder="Language (e.g., English - Fluent)";
+    input.setAttribute("aria-label", "Language Entry");
+    input.oninput=updateLatex;
+    document.getElementById("languagesContainer").appendChild(input);
+}
+
+/* GET VALUE */
+function get(id) {
+    return document.getElementById(id).value||"";
+}
+
+/* LATEX LIST */
+function getLatexList(id) {
+    let items=document.querySelectorAll("#"+id+" input");
+    let result="";
+    items.forEach(i=>{
+        if(i.value.trim()) result+="\\item "+i.value+"\n";
+    });
+    return result;
+}
+
+/* HTML LIST */
+function getHTMLList(id) {
+    let items=document.querySelectorAll("#"+id+" input");
+    let result="";
+    items.forEach(i=>{
+        if(i.value.trim()) result+="<li>"+escapeHTML(i.value)+"</li>";
+    });
+    return result;
+}
+
+function updateLatex() {
+
+    // Intelligent parser for Education, Experience, Certifications (Input format: Title, Subtitle, Date)
+    function formatExpEdu(selector) {
+        let items = Array.from(document.querySelectorAll(selector)).map(i => i.value).filter(v => v.trim() !== "");
+        let latexStr = "";
+        items.forEach(val => {
+            let parts = val.split(',');
+            if (parts.length >= 3) {
+                let date = parts.pop().trim();
+                let subtitle = parts.pop().trim();
+                let title = parts.join(',').trim();
+                latexStr += `\\noindent\\textbf{${title}} $|$ \\textit{${subtitle}} \\hfill ${date}\\\\[4pt]\n`;
+            } else if (parts.length === 2) {
+                let date = parts.pop().trim();
+                let title = parts.join(',').trim();
+                latexStr += `\\noindent\\textbf{${title}} \\hfill ${date}\\\\[4pt]\n`;
+            } else {
+                latexStr += `\\noindent\\textbf{${val}}\\\\[4pt]\n`;
+            }
+        });
+        return latexStr;
+    }
+
+    // Intelligent parser for Projects (Input format: Project Name - Description)
+    function formatProjects(selector) {
+        let items = Array.from(document.querySelectorAll(selector)).map(i => i.value).filter(v => v.trim() !== "");
+        let latexStr = "";
+        items.forEach(val => {
+            let splitIndex = val.indexOf(':');
+            if (splitIndex === -1) splitIndex = val.indexOf('-');
+            
+            if (splitIndex !== -1 && splitIndex < 50) {
+                let title = val.substring(0, splitIndex).trim();
+                let desc = val.substring(splitIndex + 1).replace(/^[\s\-]+/, '').trim(); // Remove leading dash/spaces
+                latexStr += `\\noindent\\textbf{${title}}\n\\begin{itemize}\n  \\item ${desc}\n\\end{itemize}\n`;
+            } else {
+                latexStr += `\\noindent\\textbf{${val}}\\\\[4pt]\n`;
+            }
+        });
+        return latexStr;
+    }
+
+    // Standard Bullet Point generator
+    function formatSimpleBullets(selector) {
+        let items = Array.from(document.querySelectorAll(selector)).map(i => i.value).filter(v => v.trim() !== "");
+        if(items.length === 0) return "";
+        let latexStr = "\\begin{itemize}\n";
+        items.forEach(val => {
+            latexStr += `  \\item ${val}\n`;
+        });
+        latexStr += "\\end{itemize}\n";
+        return latexStr;
+    }
+
+    // Generate specific LaTeX structures based on inputted data
+    const expLatex = formatExpEdu("#experienceContainer input");
+    const eduLatex = formatExpEdu("#educationContainer input");
+    const projLatex = formatProjects("#projectContainer input");
+    const certLatex = formatExpEdu("#certificationsContainer input");
+    const achLatex = formatSimpleBullets("#achievementsContainer input");
+    const langLatex = formatSimpleBullets("#languagesContainer input");
+    const skillsText = get("skills").trim();
+
+    const expSection = expLatex ? `\\section*{Experience}\n${expLatex}` : '';
+    const eduSection = eduLatex ? `\\section*{Education}\n${eduLatex}` : '';
+    const projSection = projLatex ? `\\section*{Projects}\n${projLatex}` : '';
+    const skillsSection = skillsText ? `\\section*{Skills}\n\\noindent ${skillsText}\n\\vspace{8pt}\n` : '';
+    const certSection = certLatex ? `\\section*{Certifications}\n${certLatex}` : '';
+    
+    let additionalSection = '';
+    if (achLatex || langLatex) {
+        additionalSection = `\\section*{Additional Information}\n`;
+        if (achLatex) additionalSection += `\\textbf{Achievements:}\n${achLatex}\n`;
+        if (langLatex) additionalSection += `\\textbf{Languages:}\n${langLatex}\n`;
+    }
+
+    let templateStr = activeTemplate ? activeTemplate.latex_template : DEFAULT_LATEX_TEMPLATE;
+    
+    latex = templateStr
+        .replace(/\[\[NAME\]\]/g, get("name"))
+        .replace(/\[\[EMAIL\]\]/g, get("email"))
+        .replace(/\[\[PHONE\]\]/g, get("phone"))
+        .replace(/\[\[LINKEDIN\]\]/g, get("linkedin"))
+        .replace(/\[\[EXPERIENCE\]\]/g, expSection)
+        .replace(/\[\[EDUCATION\]\]/g, eduSection)
+        .replace(/\[\[PROJECTS\]\]/g, projSection)
+        .replace(/\[\[SKILLS\]\]/g, skillsSection)
+        .replace(/\[\[CERTIFICATIONS\]\]/g, certSection)
+        .replace(/\[\[ADDITIONAL\]\]/g, additionalSection);
+
+    document.getElementById("output").textContent=latex;
+}
+
+function getHTMLHeader(sectionsData, forPDF) {
+    const name = escapeHTML(get("name")) || "Jane Doe";
+    const email = escapeHTML(get("email")) || "jane.doe@example.com";
+    const phone = escapeHTML(get("phone")) || "+1 (555) 123-4567";
+    const linkedin = escapeHTML(get("linkedin")) || "linkedin.com/in/janedoe";
+    const primaryColor = sectionsData.primaryColor;
+    
+    // Default template styles
+    let isCentered = true;
+    let isTwoColumn = false;
+    let isItalicDot = false;
+    
+    if (activeTemplate) {
+        const nameLower = activeTemplate.name.toLowerCase();
+        if (nameLower.includes("ats")) {
+            isCentered = false;
+            isTwoColumn = true;
+        } else if (nameLower.includes("minimal")) {
+            isCentered = false;
+            isItalicDot = true;
+        } else if (nameLower.includes("software") || nameLower.includes("data scientist") || nameLower.includes("harvard")) {
+            isCentered = true;
+        }
+    }
+    
+    if (forPDF) {
+        if (isTwoColumn) {
+            return `
+            <div style="margin-bottom: 20px; border-bottom: 1px solid black; padding-bottom: 6px; font-size: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                    <div class="name" style="font-size: 28px; font-weight: bold; text-transform: uppercase; margin: 0;">${name}</div>
+                    <div>${email}</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px;">
+                    <div>${phone}</div>
+                    <div>${linkedin}</div>
+                </div>
+            </div>
+            `;
+        }
+        if (isItalicDot) {
+            return `
+            <div style="text-align: left; margin-bottom: 20px;">
+                <div class="name" style="font-size: 28px; font-weight: bold; margin-bottom: 5px; color: ${primaryColor}; text-transform: uppercase;">${name}</div>
+                <div class="contact" style="font-style: italic; font-size: 14px;">${email} &nbsp;&middot;&nbsp; ${phone} &nbsp;&middot;&nbsp; ${linkedin}</div>
+            </div>
+            `;
+        }
+        // Centered (Harvard, Software Engineer, Data Scientist)
+        return `
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div class="name" style="font-size: 28px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase;">${name}</div>
+            <div class="contact" style="font-size: 14px;">${email} &nbsp;&middot;&nbsp; ${phone} &nbsp;&middot;&nbsp; ${linkedin}</div>
+        </div>
+        `;
+    } else {
+        // For Preview (with dark mode styling)
+        if (isTwoColumn) {
+            return `
+            <div style="margin-bottom: 24px; border-bottom: 1.5px solid #333; padding-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                    <h1 style="font-size: 28px; font-weight: bold; color: #ededed; margin: 0;">${name}</h1>
+                    <span style="color: #a1a1aa; font-size: 14px;">${email}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px;">
+                    <span style="color: #a1a1aa; font-size: 14px;">${phone}</span>
+                    <span style="color: #a1a1aa; font-size: 14px;">${linkedin}</span>
+                </div>
+            </div>
+            `;
+        }
+        if (isItalicDot) {
+            return `
+            <div style="text-align: left; margin-bottom: 24px;">
+                <h1 style="font-size: 28px; font-weight: bold; margin-bottom: 4px; color: ${primaryColor === 'black' ? '#ededed' : primaryColor};">${name}</h1>
+                <p style="color: #a1a1aa; font-style: italic; font-size: 14px;">${email} &nbsp;&middot;&nbsp; ${phone} &nbsp;&middot;&nbsp; ${linkedin}</p>
+            </div>
+            `;
+        }
+        // Centered (Harvard, Software Engineer, Data Scientist)
+        return `
+        <div style="text-align: center; margin-bottom: 24px;">
+            <h1 style="font-size: 28px; font-weight: bold; margin-bottom: 6px; color: ${primaryColor === 'black' ? '#ededed' : primaryColor};">${name}</h1>
+            <p style="color: #a1a1aa; font-size: 14px;">${email} &nbsp;&middot;&nbsp; ${phone} &nbsp;&middot;&nbsp; ${linkedin}</p>
+        </div>
+        `;
+    }
+}
+
+function getHTMLSections() {
+    let primaryColor = "black";
+    if (activeTemplate) {
+        if (activeTemplate.name.includes("Modern Minimal")) primaryColor = "#1e3a8a";
+        else if (activeTemplate.name.includes("Data Scientist")) primaryColor = "#0284c7";
+    }
+    
+    const expHTML = getHTMLList("experienceContainer") ? `
+        <h2 style="font-size:18px; margin-top:20px; margin-bottom:12px; border-bottom:1px solid ${primaryColor === 'black' ? '#333' : primaryColor}; padding-bottom:8px; color:${primaryColor === 'black' ? '#ededed' : primaryColor};">Experience</h2>
+        <ul style="padding-left:20px; font-size:14px; line-height:1.6; color:#d4d4d8;">${getHTMLList("experienceContainer")}</ul>
+    ` : '';
+    
+    const eduHTML = getHTMLList("educationContainer") ? `
+        <h2 style="font-size:18px; margin-top:20px; margin-bottom:12px; border-bottom:1px solid ${primaryColor === 'black' ? '#333' : primaryColor}; padding-bottom:8px; color:${primaryColor === 'black' ? '#ededed' : primaryColor};">Education</h2>
+        <ul style="padding-left:20px; font-size:14px; line-height:1.6; color:#d4d4d8;">${getHTMLList("educationContainer")}</ul>
+    ` : '';
+    
+    const projHTML = getHTMLList("projectContainer") ? `
+        <h2 style="font-size:18px; margin-top:24px; margin-bottom:12px; border-bottom:1px solid ${primaryColor === 'black' ? '#333' : primaryColor}; padding-bottom:8px; color:${primaryColor === 'black' ? '#ededed' : primaryColor};">Projects</h2>
+        <ul style="padding-left:20px; font-size:14px; line-height:1.6; color:#d4d4d8;">${getHTMLList("projectContainer")}</ul>
+    ` : '';
+    
+    const certHTML = getHTMLList("certificationsContainer") ? `
+        <h2 style="font-size:18px; margin-top:24px; margin-bottom:12px; border-bottom:1px solid ${primaryColor === 'black' ? '#333' : primaryColor}; padding-bottom:8px; color:${primaryColor === 'black' ? '#ededed' : primaryColor};">Certifications</h2>
+        <ul style="padding-left:20px; font-size:14px; line-height:1.6; color:#d4d4d8;">${getHTMLList("certificationsContainer")}</ul>
+    ` : '';
+    
+    const achHTML = getHTMLList("achievementsContainer") ? `
+        <h2 style="font-size:18px; margin-top:24px; margin-bottom:12px; border-bottom:1px solid ${primaryColor === 'black' ? '#333' : primaryColor}; padding-bottom:8px; color:${primaryColor === 'black' ? '#ededed' : primaryColor};">Achievements</h2>
+        <ul style="padding-left:20px; font-size:14px; line-height:1.6; color:#d4d4d8;">${getHTMLList("achievementsContainer")}</ul>
+    ` : '';
+
+    const skillsHTML = get("skills").trim() ? `
+        <h2 style="font-size:18px; margin-top:24px; margin-bottom:12px; border-bottom:1px solid ${primaryColor === 'black' ? '#333' : primaryColor}; padding-bottom:8px; color:${primaryColor === 'black' ? '#ededed' : primaryColor};">Skills & Languages</h2>
+        <p style="font-size:14px; color:#d4d4d8; line-height:1.6; margin-bottom:10px;"><b>Skills:</b> ${escapeHTML(get("skills"))}</p>
+        <ul style="padding-left:20px; font-size:14px; line-height:1.6; color:#d4d4d8;">${getHTMLList("languagesContainer")}</ul>
+    ` : '';
+
+    let isSans = false;
+    if (activeTemplate) {
+        const nameLower = activeTemplate.name.toLowerCase();
+        if (nameLower.includes("ats") || nameLower.includes("software")) {
+            isSans = true;
+        }
+    }
+    const fontStyle = isSans 
+        ? "font-family:'Inter', sans-serif;" 
+        : "font-family:'Times New Roman', serif;";
+
+    let sections = [];
+    if (activeTemplate) {
+        const nameLower = activeTemplate.name.toLowerCase();
+        if (nameLower.includes("software")) {
+            sections = [skillsHTML, expHTML, projHTML, eduHTML, certHTML, achHTML];
+        } else if (nameLower.includes("data scientist")) {
+            sections = [skillsHTML, projHTML, expHTML, eduHTML, certHTML, achHTML];
+        } else {
+            sections = [expHTML, eduHTML, projHTML, certHTML, achHTML, skillsHTML];
+        }
+    } else {
+        sections = [expHTML, eduHTML, projHTML, certHTML, achHTML, skillsHTML];
+    }
+    
+    return {
+        html: sections.join(''),
+        fontStyle: fontStyle,
+        primaryColor: primaryColor,
+        isSans: isSans
+    };
+}
+
+/* PREVIEW */
+function previewResume() {
+    const resumePreview = document.getElementById("resumePreview");
+    const modal = document.getElementById("modal");
+    
+    const sectionsData = getHTMLSections();
+
+    resumePreview.innerHTML = `
+        <div style="${sectionsData.fontStyle} color: #ededed;">
+            ${getHTMLHeader(sectionsData, false)}
+            ${sectionsData.html}
+        </div>
+    `;
+
+    modal.style.display = "flex";
+    updateScrollLock();
+    const closeBtn = modal.querySelector('.close');
+    if (closeBtn) closeBtn.focus();
+}
+
+/* CLOSE */
+function closeModal() {
+    document.getElementById("modal").style.display="none";
+    updateScrollLock();
+}
+
+function openTemplateModal() {
+    const modal = document.getElementById("templateModal");
+    if (modal) {
+        modal.style.display = "flex";
+        updateScrollLock();
+        const closeBtn = modal.querySelector('.close');
+        if (closeBtn) closeBtn.focus();
+    }
+}
+
+function closeTemplateModal() {
+    const modal = document.getElementById("templateModal");
+    if (modal) {
+        modal.style.display = "none";
+        updateScrollLock();
+    }
+}
+
+function updateScrollLock() {
+    const previewModal = document.getElementById("modal");
+    const templateModal = document.getElementById("templateModal");
+    const isAnyOpen = (previewModal && previewModal.style.display === "flex") || 
+                      (templateModal && templateModal.style.display === "flex");
+    document.body.style.overflow = isAnyOpen ? "hidden" : "";
+}
+
+window.addEventListener("click", function(event) {
+    const previewModal = document.getElementById("modal");
+    const templateModal = document.getElementById("templateModal");
+    let changed = false;
+    if (event.target === previewModal) {
+        previewModal.style.display = "none";
+        changed = true;
+    }
+    if (event.target === templateModal) {
+        templateModal.style.display = "none";
+        changed = true;
+    }
+    if (changed) {
+        updateScrollLock();
+    }
+});
+
+window.addEventListener("keydown", function(event) {
+    if (event.key === "Escape") {
+        closeModal();
+        closeTemplateModal();
+        return;
+    }
+
+    if (event.key === "Tab") {
+        const previewModal = document.getElementById("modal");
+        const templateModal = document.getElementById("templateModal");
+        let activeModal = null;
+        
+        if (previewModal && previewModal.style.display === "flex") {
+            activeModal = previewModal;
+        } else if (templateModal && templateModal.style.display === "flex") {
+            activeModal = templateModal;
+        }
+        
+        if (activeModal) {
+            const focusables = activeModal.querySelectorAll('button, [href], input, select, textarea, [tabindex="0"], .close');
+            if (focusables.length === 0) return;
+            
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            
+            if (event.shiftKey) {
+                if (document.activeElement === first) {
+                    last.focus();
+                    event.preventDefault();
+                }
+            } else {
+                if (document.activeElement === last) {
+                    first.focus();
+                    event.preventDefault();
+                }
+            }
+        }
+    }
+});
+
+/* COPY */
+function copyLatex(btn) {
+    navigator.clipboard.writeText(latex);
+    const copyBtn = btn || (window.event ? window.event.target : null);
+    if (copyBtn) {
+        const originalText = copyBtn.innerText;
+        copyBtn.innerText = "Copied ✓";
+        setTimeout(() => { copyBtn.innerText = originalText; }, 2000);
+    }
+}
+
+/* DOWNLOAD TEX */
+function downloadTex() {
+    let blob=new Blob([latex],{type:"application/x-tex"});
+    let link=document.createElement("a");
+    link.href=URL.createObjectURL(blob);
+    link.download="resume.tex";
+    link.click();
+}
+
+/* DOWNLOAD HARVARD PDF */
+function downloadPDF() {
+    let win=window.open("","_blank");
+
+    const sectionsData = getHTMLSections();
+    const isSans = sectionsData.isSans;
+    
+    const fontStack = isSans 
+        ? 'font-family:"Arial",sans-serif;' 
+        : 'font-family:"Times New Roman",serif;';
+    const borderStyle = isSans 
+        ? 'border-bottom: 1.5px solid #222;' 
+        : 'border-bottom: 1px solid black;';
+
+    win.document.write(`
+    <html>
+    <head>
+    <title>Resume</title>
+
+    <style>
+    body { ${fontStack} padding:60px; max-width:800px; margin:auto; color:black; line-height: 1.5; }
+    .name { font-size:28px; font-weight:bold; margin-bottom:5px; text-transform: uppercase; letter-spacing: 1px; }
+    .contact { margin-bottom:24px; font-size: 14px; }
+    .section-title { font-weight:bold; margin-top:20px; ${borderStyle} padding-bottom:2px; margin-bottom: 8px; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; }
+    ul { margin-top:0px; padding-left: 20px; }
+    li { margin-bottom: 4px; }
+    p { margin: 8px 0; }
+    </style>
+
+    </head>
+    <body>
+
+    ${getHTMLHeader(sectionsData, true)}
+
+    ${sectionsData.html
+        .replace(/color:\s*#d4d4d8;/gi, "color:black;")
+        .replace(/color:\s*#a1a1aa;/gi, "color:black;")
+        .replace(/h2 style="/gi, 'h2 class="section-title" style="color:black; border-bottom:none; ')
+    }
+
+    </body>
+    </html>
+    `);
+
+    win.document.close();
+
+    // Wait for fonts to load before printing
+    setTimeout(() => {
+        win.print();
+    }, 250);
+}
+
+/* HELPER EXTRACTOR */
+function extractList(selector) {
+    return Array.from(document.querySelectorAll(selector)).map(i => i.value).filter(v => v.trim() !== "");
+}
+
+/* VALIDATE RESUME via FASTAPI */
+async function validateResume() {
+    const resumeData = { 
+        name: get("name"), 
+        email: get("email"), 
+        phone: get("phone"), 
+        linkedin: get("linkedin"), 
+        skills: get("skills"), 
+        education: extractList("#educationContainer input"), 
+        experience: extractList("#experienceContainer input"), 
+        projects: extractList("#projectContainer input"),
+        certifications: extractList("#certificationsContainer input"),
+        achievements: extractList("#achievementsContainer input"),
+        languages: extractList("#languagesContainer input")
+    };
+
+    try {
+        const response = await fetch(`${CONFIG.FASTAPI_BASE_URL}/resume`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(resumeData)
+        });
+
+        const result = await response.json();
+        const resultDiv = document.getElementById("validationResult");
+        resultDiv.style.display = "block";
+
+        if (response.ok) {
+            resultDiv.innerText = "✓ Validation Success";
+            resultDiv.style.color = "#10b981";
+            resultDiv.style.borderColor = "#064e3b";
+            resultDiv.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
+            showToast("Validation Success", "success");
+        } else {
+            // Very clean output
+            resultDiv.innerText = "✕ Validation Failed - Check that no inputs are empty!";
+            resultDiv.style.color = "#ef4444";
+            resultDiv.style.borderColor = "#7f1d1d";
+            resultDiv.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
+            showToast("Validation Failed", "error");
+        }
+    } catch (error) {
+        showToast("Server connection failed! Is backend running?", "error");
+    }
+}
+
+/* AI FEEDBACK via FASTAPI NLP */
+async function getAIFeedback() {
+
+    const resumeData = {
+        name: get("name") || "Jane Doe", 
+        email: get("email") || "jane@example.com",
+        phone: get("phone") || "555-0100",
+        linkedin: get("linkedin") || "linkedin.com/in",
+        skills: get("skills") || "JavaScript",
+        education: extractList("#educationContainer input").length ? extractList("#educationContainer input") : ["University"],
+        experience: extractList("#experienceContainer input").length ? extractList("#experienceContainer input") : ["Google"],
+        projects: extractList("#projectContainer input").length ? extractList("#projectContainer input") : ["I made a website"],
+        certifications: extractList("#certificationsContainer input").length ? extractList("#certificationsContainer input") : ["AWS"],
+        achievements: extractList("#achievementsContainer input").length ? extractList("#achievementsContainer input") : ["1st Place"],
+        languages: extractList("#languagesContainer input").length ? extractList("#languagesContainer input") : ["English"]
+    };
+
+    const aiHeader = document.getElementById("aiHeader");
+    const scoreContainer = document.getElementById("aiScoreContainer");
+    const aiContainer = document.getElementById("aiFeedbackContainer");
+    const tabsNav = document.getElementById("aiTabsNav");
+    if (tabsNav) tabsNav.style.display = "none";
+    
+    // Smooth loading state with rotating message stages
+    const loadingStages = [
+        "Scanning resume layout & sections...",
+        "Analyzing project descriptions...",
+        "Checking for active verbs...",
+        "Measuring quantifiable metrics...",
+        "Assembling resume coaching dashboard..."
+    ];
+    let currentStage = 0;
+    
+    aiContainer.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 0;">
+            <div class="spinner" style="width: 32px; height: 32px; border-width: 3px; border-top-color: #10b981;"></div>
+            <p id="aiLoadingText" style="color: #a1a1aa; font-size: 14px; margin-top: 16px; font-weight: 500; transition: opacity 0.15s ease; text-align: center;">${loadingStages[0]}</p>
+        </div>
+    `;
+    if(scoreContainer) scoreContainer.innerHTML = "";
+
+    const loadingInterval = setInterval(() => {
+        currentStage = (currentStage + 1) % loadingStages.length;
+        const textElement = document.getElementById("aiLoadingText");
+        if (textElement) {
+            textElement.style.opacity = 0;
+            setTimeout(() => {
+                textElement.innerText = loadingStages[currentStage];
+                textElement.style.opacity = 1;
+            }, 150);
+        }
+    }, 1000);
+
+    try {
+        const response = await fetch(`${CONFIG.FASTAPI_BASE_URL}/analyze`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(resumeData)
+        });
+
+        clearInterval(loadingInterval);
+        const result = await response.json();
+        aiContainer.innerHTML = ""; 
+        
+        if (response.ok && result.overall_score !== undefined) {
+            // Determine strength level and visual classes
+            let strengthLevel = "Needs Improvement";
+            let levelClass = "dashboard-level-needs-improvement";
+            let progressClass = "dashboard-progress-needs-improvement";
+            let scoreColor = "#ef4444";
+            
+            if (result.overall_score >= 85) {
+                strengthLevel = "Excellent";
+                levelClass = "dashboard-level-excellent";
+                progressClass = "dashboard-progress-excellent";
+                scoreColor = "#10b981";
+            } else if (result.overall_score >= 70) {
+                strengthLevel = "Good";
+                levelClass = "dashboard-level-good";
+                progressClass = "dashboard-progress-good";
+                scoreColor = "#eab308";
+            }
+            
+            // 1. Render Dashboard Score Card
+            const dashboardHTML = `
+                <div class="dashboard-card">
+                    <div class="dashboard-header">
+                        <div class="dashboard-score-box">
+                            <span class="dashboard-score-label">Overall Resume Score</span>
+                            <div class="dashboard-score-num" style="color: ${scoreColor};">
+                                ${result.overall_score}<span style="font-size: 20px; color: #555; font-weight: 500;">/100</span>
+                            </div>
+                        </div>
+                        <span class="dashboard-level-badge ${levelClass}">
+                            <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 2px;"><circle cx="12" cy="12" r="10"></circle></svg>
+                            ${strengthLevel}
+                        </span>
+                    </div>
+                    
+                    <div class="dashboard-progress-container">
+                        <div class="dashboard-progress-bg">
+                            <div class="dashboard-progress-fill ${progressClass}" style="width: ${result.overall_score}%;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-grid">
+                        <div>
+                            <div class="dashboard-section-title">
+                                <span style="color: #10b981; font-weight: bold; font-size: 14px;">✓</span> Strengths
+                            </div>
+                            <ul class="dashboard-list">
+                                ${result.strengths && result.strengths.length 
+                                    ? result.strengths.map(s => `
+                                        <li class="dashboard-list-item">
+                                            <span class="dashboard-icon-check">✓</span>
+                                            <span>${s}</span>
+                                        </li>
+                                    `).join('')
+                                    : `<li class="dashboard-list-item" style="color: #666;">No major strengths detected yet. Keep improving!</li>`
+                                }
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <div class="dashboard-section-title">
+                                <span style="color: #eab308; font-weight: bold; font-size: 14px;">•</span> Key Suggestions
+                            </div>
+                            <ul class="dashboard-list">
+                                ${result.suggestions && result.suggestions.length 
+                                    ? result.suggestions.map(s => `
+                                        <li class="dashboard-list-item">
+                                            <span class="dashboard-icon-bullet">•</span>
+                                            <span>${s}</span>
+                                        </li>
+                                    `).join('')
+                                    : `<li class="dashboard-list-item" style="color: #10b981;">🎉 All checks passed! Your resume is fully optimized.</li>`
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 2. Render ATS Score Card
+            let atsCardHTML = "";
+            if (result.ats_score !== undefined) {
+                let atsLevel = "Needs Improvement";
+                let atsStatusClass = "ats-status-needs-improvement";
+                let atsProgressClass = "ats-progress-needs-improvement";
+                let atsColor = "#ef4444";
+                
+                if (result.ats_score >= 90) {
+                    atsLevel = "Excellent";
+                    atsStatusClass = "ats-status-excellent";
+                    atsProgressClass = "ats-progress-excellent";
+                    atsColor = "#10b981";
+                } else if (result.ats_score >= 75) {
+                    atsLevel = "Good";
+                    atsStatusClass = "ats-status-good";
+                    atsProgressClass = "ats-progress-good";
+                    atsColor = "#3b82f6";
+                } else if (result.ats_score >= 60) {
+                    atsLevel = "Fair";
+                    atsStatusClass = "ats-status-fair";
+                    atsProgressClass = "ats-progress-fair";
+                    atsColor = "#eab308";
+                }
+                
+                atsCardHTML = `
+                    <div class="ats-card">
+                        <div class="ats-header">
+                            <div>
+                                <div class="ats-label">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                                    ATS Compatibility Score
+                                </div>
+                                <div class="ats-score-display">
+                                    <span class="ats-score-number" style="color: ${atsColor};">${result.ats_score}</span>
+                                    <span class="ats-score-suffix">/100</span>
+                                </div>
+                            </div>
+                            <span class="ats-status-badge ${atsStatusClass}">${atsLevel}</span>
+                        </div>
+                        
+                        <div class="ats-progress-bg">
+                            <div class="ats-progress-fill ${atsProgressClass}" style="width: ${result.ats_score}%;"></div>
+                        </div>
+                        
+                        <div class="ats-dual-scores">
+                            <div class="ats-score-tile">
+                                <span class="ats-label">Resume Quality</span>
+                                <div style="font-size: 28px; font-weight: 700; color: ${scoreColor};">${result.overall_score}<span style="font-size: 14px; color: #555;">/100</span></div>
+                            </div>
+                            <div class="ats-score-tile">
+                                <span class="ats-label">ATS Readiness</span>
+                                <div style="font-size: 28px; font-weight: 700; color: ${atsColor};">${result.ats_score}<span style="font-size: 14px; color: #555;">/100</span></div>
+                            </div>
+                        </div>
+                        
+                        <div class="ats-sections">
+                            ${result.ats_strengths && result.ats_strengths.length ? `
+                                <div class="ats-section">
+                                    <div class="ats-section-title strengths">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                        ATS Strengths (${result.ats_strengths.length})
+                                    </div>
+                                    ${result.ats_strengths.map(s => `
+                                        <div class="ats-item">
+                                            <span class="ats-icon" style="color: #10b981;">&#10003;</span>
+                                            <span>${s}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                            
+                            ${result.ats_issues && result.ats_issues.length ? `
+                                <div class="ats-section">
+                                    <div class="ats-section-title issues">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                        Issues Found (${result.ats_issues.length})
+                                    </div>
+                                    ${result.ats_issues.map(s => `
+                                        <div class="ats-item">
+                                            <span class="ats-icon" style="color: #ef4444;">&#10007;</span>
+                                            <span>${s}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                            
+                            ${result.ats_recommendations && result.ats_recommendations.length ? `
+                                <div class="ats-section">
+                                    <div class="ats-section-title recommendations">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                        Recommendations (${result.ats_recommendations.length})
+                                    </div>
+                                    ${result.ats_recommendations.map(s => `
+                                        <div class="ats-item">
+                                            <span class="ats-icon" style="color: #8b5cf6;">&#9656;</span>
+                                            <span>${s}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 3. Render Project-by-Project Breakdown HTML
+            let projectsFeedbackHTML = "";
+            const projectsFeedback = result.project_feedback || result.analysis || [];
+            projectsFeedback.forEach((item, index) => {
+                const isStrong = item.strength === "strong";
+                const badgeClass = isStrong ? "strong" : "weak";
+                const color = isStrong ? "#10b981" : "#ef4444"; 
+                const percentage = Math.round(item.confidence * 100);
+                const safeSuggestion = item.suggestion.replace(/"/g, '&quot;').replace(/'/g, "\\'");
+                const safeProject = item.project.replace(/"/g, '&quot;').replace(/'/g, "\\'");
+                
+                projectsFeedbackHTML += `
+                <div class="project-feedback-card" data-index="${index}" style="background: #050505; padding: 20px; margin-top: 16px; border-radius: 8px; border: 1px solid #222; position: relative; transition: border-color 0.2s ease;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                        <span class="badge ${badgeClass}">${item.strength}</span>
+                        <div style="text-align: right; width: 120px;">
+                            <div style="color: #a1a1aa; font-size: 11px; font-weight: 600; text-transform: uppercase;">Confidence <span style="color: #ededed;">${percentage}%</span></div>
+                            <div class="progress-bg">
+                                <div class="progress-fill" style="width: ${percentage}%; background-color: ${color};"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p style="font-weight: 500; margin-bottom: 12px; font-size: 14px; color: #ededed; line-height: 1.5; padding-bottom: 16px; border-bottom: 1px solid #1a1a1a;">
+                         ${escapeHTML(item.project)}
+                    </p>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #0a0a0a; padding: 12px; border-radius: 6px; border: 1px solid #1a1a1a; margin-top: 12px;">
+                        <p style="font-size: 13px; color: #a1a1aa; line-height: 1.5; margin: 0; flex: 1; padding-right: 16px;">💡 <span style="color: #d4d4d8;">${escapeHTML(item.suggestion)}</span></p>
+                        <button class="btn-icon" onclick="copyText(this, '${safeSuggestion}')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            Copy
+                        </button>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;">
+                        <button class="btn-icon" onclick="improveBullet(this, ${index}, '${safeProject}')" style="background: rgba(16, 185, 129, 0.08); color: #10b981; border-color: rgba(16, 185, 129, 0.15);">
+                            ✨ Improve Bullet
+                        </button>
+                    </div>
+
+                    <div class="rewrite-container" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #222;">
+                    </div>
+                </div>
+                `;
+            });
+
+            // Put inside dynamic containers
+            const insightsContainerHTML = `
+                <div id="aiInsightsContent">
+                    ${dashboardHTML}
+                    <h3 style="margin-top: 32px; margin-bottom: 8px;">Project-by-Project Breakdown</h3>
+                    ${projectsFeedbackHTML}
+                </div>
+            `;
+
+            let atsContainerHTML = "";
+            if (result.ats_score !== undefined) {
+                atsContainerHTML = `
+                    <div id="aiAtsContent" style="display: none;">
+                        ${atsCardHTML}
+                    </div>
+                `;
+            }
+
+            aiContainer.innerHTML = insightsContainerHTML + atsContainerHTML;
+
+            // Show and reset tabs navigation
+            const tabsNav = document.getElementById("aiTabsNav");
+            if (tabsNav) {
+                tabsNav.style.display = result.ats_score !== undefined ? "flex" : "none";
+                const tabLinks = tabsNav.querySelectorAll(".tab-link");
+                if (tabLinks && tabLinks.length >= 2) {
+                    tabLinks[0].classList.add("active");
+                    tabLinks[1].classList.remove("active");
+                }
+            }
+        } else {
+            aiContainer.innerHTML = "<p style='color: #ef4444; font-size: 14px;'>Failed to analyze. Please check inputs.</p>";
+            showToast("Failed to analyze resume", "error");
+        }
+    } catch (error) {
+        clearInterval(loadingInterval);
+        aiContainer.innerHTML = "<p style='color: #ef4444; font-size: 14px;'>Server connection failed.</p>";
+        showToast("Server connection failed", "error");
+    }
+}
+
+window.copyText = function(btn, text) {
+    navigator.clipboard.writeText(text);
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = `✓ Copied`;
+    setTimeout(() => { btn.innerHTML = originalHTML; }, 2000);
+}
+
+window.improveBullet = async function(btn, index, originalText) {
+    const card = btn.closest('.project-feedback-card');
+    const container = card.querySelector('.rewrite-container');
+    
+    // Toggle container if it's already generated and visible
+    if (container.style.display === 'block') {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px 0; color: #a1a1aa; font-size: 13px;">
+            <div class="spinner" style="width: 16px; height: 16px; border-width: 2px; border-top-color: #10b981;"></div>
+            Rewriting...
+        </div>
+    `;
+    
+    showToast("Enhancing bullet point...", "info");
+    
+    try {
+        const response = await fetch(`${CONFIG.FASTAPI_BASE_URL}/rewrite-bullet`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: originalText })
+        });
+        
+        if (!response.ok) {
+            throw new Error("Failed to rewrite");
+        }
+        
+        const data = await response.json();
+        
+        // Render comparison view
+        container.innerHTML = `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 12px; margin-top: 8px;">
+                <div style="background: rgba(239, 68, 68, 0.03); border: 1px solid rgba(239, 68, 68, 0.15); padding: 12px; border-radius: 6px;">
+                    <div style="font-size: 11px; text-transform: uppercase; color: #ef4444; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.05em;">Original</div>
+                    <div style="font-size: 13px; color: #a1a1aa; line-height: 1.4;">${data.original}</div>
+                </div>
+                <div style="background: rgba(16, 185, 129, 0.03); border: 1px solid rgba(16, 185, 129, 0.15); padding: 12px; border-radius: 6px;">
+                    <div style="font-size: 11px; text-transform: uppercase; color: #10b981; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.05em;">Improved</div>
+                    <div class="improved-bullet-text" style="font-size: 13px; color: #ededed; line-height: 1.4; font-weight: 500;">${data.improved}</div>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 12px;">
+                <div style="font-size: 11px; text-transform: uppercase; color: #666; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.05em;">Key Adjustments</div>
+                <ul style="padding-left: 16px; margin: 0; font-size: 12px; color: #a1a1aa; line-height: 1.5;">
+                    ${data.changes.map(c => `<li>${c}</li>`).join('')}
+                </ul>
+            </div>
+            
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button onclick="replaceBullet(${index}, this)" class="button-primary" style="margin: 0; padding: 6px 14px; font-size: 12px;">
+                    Replace with Improved Version
+                </button>
+            </div>
+        `;
+        
+        showToast("Enhancement complete", "success");
+        
+    } catch (error) {
+        container.innerHTML = `
+            <div style="color: #ef4444; font-size: 13px; padding: 8px 0; text-align: center;">
+                ✕ Failed to rewrite bullet point. Please try again.
+            </div>
+        `;
+        showToast("Rewriting failed", "error");
+    }
+}
+
+window.replaceBullet = function(index, btn) {
+    const card = btn.closest('.project-feedback-card');
+    const textEl = card.querySelector('.improved-bullet-text');
+    if (!textEl) return;
+    const improvedText = textEl.innerText;
+    
+    const inputs = document.querySelectorAll('#projectContainer input');
+    if (index >= 0 && index < inputs.length) {
+        inputs[index].value = improvedText;
+        updateLatex();
+        saveDraft();
+        showToast("Bullet replaced! Re-analyzing...", "success");
+        getAIFeedback();
+    } else {
+        showToast("Could not find project input field", "error");
+    }
+}
+
+
+window.switchAITab = function(tabName) {
+    const insightsContent = document.getElementById("aiInsightsContent");
+    const atsContent = document.getElementById("aiAtsContent");
+    const tabs = document.querySelectorAll("#aiTabsNav .tab-link");
+    if (!tabs || tabs.length === 0) return;
+    
+    if (tabName === 'insights') {
+        if (insightsContent) insightsContent.style.display = "block";
+        if (atsContent) atsContent.style.display = "none";
+        tabs[0].classList.add("active");
+        if (tabs[1]) tabs[1].classList.remove("active");
+    } else if (tabName === 'ats') {
+        if (insightsContent) insightsContent.style.display = "none";
+        if (atsContent) atsContent.style.display = "block";
+        if (tabs[0]) tabs[0].classList.remove("active");
+        if (tabs[1]) tabs[1].classList.add("active");
+    }
+}
+
+/* DJANGO API: SAVE RESUME */
+async function saveResume() {
+    const resumeData = { 
+        name: get("name"), 
+        email: get("email"), 
+        phone: get("phone"), 
+        linkedin: get("linkedin"), 
+        skills: get("skills"), 
+        education: extractList("#educationContainer input"), 
+        experience: extractList("#experienceContainer input"), 
+        projects: extractList("#projectContainer input"),
+        certifications: extractList("#certificationsContainer input"),
+        achievements: extractList("#achievementsContainer input"),
+        languages: extractList("#languagesContainer input")
+    };
+    
+    showToast("Saving...", "info");
+
+    try {
+        const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/save-resume/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(resumeData),
+            credentials: "include"
+        });
+
+        if (response.ok) {
+            showToast("Resume saved successfully", "success");
+            fetchResumes();
+        } else if (response.status === 401 || response.status === 403) {
+            showToast("Please login first", "error");
+        } else {
+            showToast("Failed to save resume", "error");
+        }
+    } catch (error) {
+        showToast("Server connection failed!", "error");
+    }
+}
+
+/* DJANGO API: FETCH RESUMES */
+async function fetchResumes() {
+    const listDiv = document.getElementById("cloudResumesList");
+    listDiv.innerHTML = "<p style='color:#a1a1aa; font-size: 14px;'>Loading...</p>";
+    showToast("Loading resumes...", "info");
+
+    try {
+        const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/my-resumes/`, {
+            method: "GET",
+            credentials: "include"
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.length === 0) {
+                listDiv.innerHTML = "<p style='color:#a1a1aa; font-size: 14px;'>No resumes found.</p>";
+                return;
+            }
+            
+            listDiv.innerHTML = ""; 
+            
+            data.forEach(r => {
+                const card = document.createElement("div");
+                card.className = "resume-card";
+                
+                const name = r.name || "Unnamed Resume";
+                const email = r.email || "No email";
+                let previewText = "No skills/projects listed.";
+                if (r.skills) {
+                    previewText = `Skills: ${r.skills}`;
+                } else if (r.projects && r.projects.length > 0) {
+                    previewText = `Projects: ${r.projects[0]}`;
+                }
+
+                card.innerHTML = `
+                    <div class="resume-card-header">
+                        <div>
+                            <div class="resume-card-title">${name}</div>
+                            <div class="resume-card-email">${email}</div>
+                        </div>
+                    </div>
+                    <div class="resume-card-preview">${previewText}</div>
+                `;
+                
+                const btn = document.createElement("button");
+                btn.className = "button-primary resume-card-btn";
+                btn.innerText = "Load";
+                btn.onclick = () => loadCloudResume(r);
+                
+                card.appendChild(btn);
+                listDiv.appendChild(card);
+            });
+            showToast("Resumes loaded successfully", "success");
+        } else if (response.status === 401 || response.status === 403) {
+            listDiv.innerHTML = "<p style='color:#ef4444; font-size: 14px;'>Please login to view resumes.</p>";
+            showToast("Please login first", "error");
+        } else {
+            listDiv.innerHTML = "<p style='color:#ef4444; font-size: 14px;'>Failed to load resumes.</p>";
+            showToast("Failed to load resumes", "error");
+        }
+    } catch (error) {
+        listDiv.innerHTML = "<p style='color:#ef4444; font-size: 14px;'>Server connection failed!</p>";
+        showToast("Server connection failed!", "error");
+    }
+}
+
+function loadCloudResume(data) {
+    document.getElementById("name").value = data.name || "";
+    document.getElementById("email").value = data.email || "";
+    document.getElementById("phone").value = data.phone || "";
+    document.getElementById("linkedin").value = data.linkedin || "";
+    document.getElementById("skills").value = data.skills || "";
+    appendInputs("educationContainer", data.education || [], addEducation);
+    appendInputs("experienceContainer", data.experience || [], addExperience);
+    appendInputs("projectContainer", data.projects || [], addProject);
+    appendInputs("certificationsContainer", data.certifications || [], addCertifications);
+    appendInputs("achievementsContainer", data.achievements || [], addAchievements);
+    appendInputs("languagesContainer", data.languages || [], addLanguages);
+    updateLatex();
+    showToast("Resume loaded successfully", "success");
+}
+
+/* AUTHENTICATION STATE */
+async function checkAuthStatus() {
+    const authNav = document.getElementById("authNav");
+    
+    // Show loading indicator
+    authNav.innerHTML = `<span class="auth-user" style="display: flex; align-items: center; gap: 6px;"><div class="spinner" style="width: 12px; height: 12px; border-width: 2px;"></div> Checking Auth...</span>`;
+    
+    try {
+        const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/me/`, {
+            method: "GET",
+            credentials: "include"
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            authNav.innerHTML = `
+                <span class="auth-user">Hi, ${data.username}</span>
+                <a href="${CONFIG.DJANGO_BASE_URL}/accounts/logout/" class="auth-btn">Logout</a>
+            `;
+            isLoggedIn = true;
+        } else {
+            authNav.innerHTML = `
+                <a href="${CONFIG.DJANGO_BASE_URL}/accounts/login/?next=${CONFIG.FRONTEND_URL}/" class="auth-btn">Login</a>
+                <a href="${CONFIG.DJANGO_BASE_URL}/accounts/signup/?next=${CONFIG.FRONTEND_URL}/" class="auth-btn auth-btn-primary">Sign Up</a>
+            `;
+            isLoggedIn = false;
+        }
+    } catch (error) {
+        authNav.innerHTML = `
+            <a href="${CONFIG.DJANGO_BASE_URL}/accounts/login/?next=${CONFIG.FRONTEND_URL}/" class="auth-btn">Login</a>
+            <a href="${CONFIG.DJANGO_BASE_URL}/accounts/signup/?next=${CONFIG.FRONTEND_URL}/" class="auth-btn auth-btn-primary">Sign Up</a>
+        `;
+        isLoggedIn = false;
+    }
+
+    await fetchTemplates();
+    await fetchMyTemplates();
+    await loadSelectedTemplate();
+}
+
+</script>
+
+</body>
+
+</html>
