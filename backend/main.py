@@ -14,7 +14,7 @@ app = FastAPI(
 # Add CORS so the JS frontend can fetch from this API without browser blocks
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://resumify-sand-eta.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

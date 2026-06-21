@@ -157,8 +157,8 @@ STATIC_URL = 'static/'
 SITE_ID = 1
 
 LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = 'http://127.0.0.1:5500/'
-LOGOUT_REDIRECT_URL = 'http://127.0.0.1:5500/'
+LOGIN_REDIRECT_URL = 'https://resumify-sand-eta.vercel.app/'
+LOGOUT_REDIRECT_URL = 'https://resumify-sand-eta.vercel.app/'
 
 ACCOUNT_LOGIN_METHODS = {'email', 'username'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
