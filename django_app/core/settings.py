@@ -19,6 +19,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-30te(n2jfcj6&u
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # -------------------- CORS + CSRF --------------------
 CORS_ALLOW_CREDENTIALS = True
@@ -176,6 +177,8 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_HTTPONLY = False
+CSRF_USE_SESSIONS = False
 
 # -------------------- DJANGO REST FRAMEWORK --------------------
 REST_FRAMEWORK = {
