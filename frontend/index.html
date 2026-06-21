@@ -1251,13 +1251,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
  * ============================================================ */
 const CONFIG = {
     // FastAPI backend — handles /resume and /analyze endpoints
-    FASTAPI_BASE_URL: "http://127.0.0.1:8000",
+    FASTAPI_BASE_URL: "https://resumify-api.up.railway.app",
 
     // Django backend — handles authentication & cloud storage
-    DJANGO_BASE_URL: "http://127.0.0.1:8001",
+    DJANGO_BASE_URL: "https://resumify-auth.up.railway.app",
 
     // Frontend origin — used in auth redirects (login/signup ?next= parameter)
-    FRONTEND_URL: "http://127.0.0.1:5500"
+    FRONTEND_URL: "https://resumify-sand-eta.vercel.app"
 };
 
 function escapeHTML(str) {
