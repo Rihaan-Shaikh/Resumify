@@ -17,9 +17,24 @@ class Resume(models.Model):
     languages = models.JSONField()
 
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Resume of {self.name}"
+
+class UserWorkspace(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='workspace')
+    active_resume = models.ForeignKey(Resume, on_delete=models.SET_NULL, null=True, blank=True)
+    active_template = models.ForeignKey('ResumeTemplate', on_delete=models.SET_NULL, null=True, blank=True)
+    scroll_position = models.IntegerField(default=0)
+    editor_state = models.JSONField(default=dict, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "User Workspaces"
+
+    def __str__(self):
+        return f"Workspace of {self.user.username}"
 
 class ResumeTemplate(models.Model):
     name = models.CharField(max_length=100)

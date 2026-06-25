@@ -1078,9 +1078,24 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 <body>
 
 <header>
-    <div>Resumify — Editor</div>
+    <div style="display: flex; align-items: center; gap: 16px;">
+        <span style="font-weight: 600;">Resumify — Editor</span>
+        <span id="save-indicator" style="font-size: 12px; color: #a1a1aa; font-weight: 500; display: inline-flex; align-items: center; gap: 6px;"></span>
+    </div>
     <div class="auth-nav" id="authNav"></div>
 </header>
+
+<div id="workspace-loader" style="position: fixed; inset: 0; background: rgba(13, 13, 13, 0.95); backdrop-filter: blur(12px); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; font-family: 'Inter', sans-serif; gap: 16px; transition: opacity 0.5s ease;">
+    <div class="spinner" style="width: 40px; height: 40px; border-width: 4px; border-top-color: #ededed;"></div>
+    <div style="font-size: 16px; font-weight: 500; color: #ededed;">Loading Workspace...</div>
+</div>
+
+<div id="empty-state-view" style="display: none; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 48px; text-align: center; max-width: 480px; margin: 80px auto; background: rgba(20,20,20,0.7); backdrop-filter: blur(12px); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 12px 40px rgba(0,0,0,0.3); animation: slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;">
+    <div style="font-size: 48px;">📄</div>
+    <h3 style="margin-bottom: 8px;">No Resumes Found</h3>
+    <p style="color: #a1a1aa; font-size: 14px; line-height: 1.5; margin-bottom: 12px;">Create your first resume to launch the workspace and unlock intelligent autosaving, template library management, and real-time AI suggestions.</p>
+    <button class="button-primary" id="create-resume-btn" onclick="createFirstResume()" style="padding: 12px 24px; font-size: 14px; margin: 0;">Create Resume</button>
+</div>
 
 <div class="main">
 
@@ -1615,7 +1630,9 @@ function saveDraft() {
 let saveTimeout;
 document.addEventListener("input", (e) => {
     // Only save draft if user is typing in form (not modal)
-    if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+    if ((e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') && 
+        !e.target.closest('.modal') && !e.target.closest('#conflict-banner')) {
+        updateLatex();
         clearTimeout(saveTimeout);
         saveTimeout = setTimeout(saveDraft, 1500);
     }
@@ -1882,6 +1899,9 @@ function updateLatex() {
         .replace(/\[\[ADDITIONAL\]\]/g, additionalSection);
 
     document.getElementById("output").textContent=latex;
+    if (typeof checkDirtyState === "function") {
+        checkDirtyState();
+    }
 }
 
 function getHTMLHeader(sectionsData, forPDF) {
@@ -2730,23 +2750,292 @@ window.switchAITab = function(tabName) {
     }
 }
 
-/* DJANGO API: SAVE RESUME */
-async function saveResume() {
-    const resumeData = { 
-        name: get("name"), 
-        email: get("email"), 
-        phone: get("phone"), 
-        linkedin: get("linkedin"), 
-        skills: get("skills"), 
-        education: extractList("#educationContainer input"), 
-        experience: extractList("#experienceContainer input"), 
+/* WORKSPACE VARIABLES & STATE */
+let isDirty = false;
+let originalData = null;
+let loadedResumeId = null;
+let saveDebounceTimeout = null;
+let lastSavedTime = null;
+let saveRetryTimer = null;
+let saveTimerInterval = null;
+let tabConflictDetected = false;
+let workspaceChannel = null;
+const tabId = Math.random().toString(36).substring(2, 11);
+
+function getFormData() {
+    return {
+        name: document.getElementById("name").value,
+        email: document.getElementById("email").value,
+        phone: document.getElementById("phone").value,
+        linkedin: document.getElementById("linkedin").value,
+        skills: document.getElementById("skills").value,
+        education: extractList("#educationContainer input"),
+        experience: extractList("#experienceContainer input"),
         projects: extractList("#projectContainer input"),
         certifications: extractList("#certificationsContainer input"),
         achievements: extractList("#achievementsContainer input"),
         languages: extractList("#languagesContainer input")
     };
+}
+
+function checkDirtyState() {
+    if (!isLoggedIn || !loadedResumeId) return;
+    
+    if (tabConflictDetected) {
+        updateSaveIndicatorState("conflict");
+        return;
+    }
+    
+    const currentData = getFormData();
+    const currentStr = JSON.stringify(currentData);
+    const originalStr = JSON.stringify(originalData);
+    
+    if (currentStr !== originalStr) {
+        isDirty = true;
+        updateSaveIndicatorState("dirty");
+        clearTimeout(saveDebounceTimeout);
+        saveDebounceTimeout = setTimeout(autosaveResume, 1000);
+    } else {
+        isDirty = false;
+        updateSaveIndicatorState("saved");
+        clearTimeout(saveDebounceTimeout);
+    }
+}
+
+async function autosaveResume() {
+    if (!isLoggedIn || !loadedResumeId || tabConflictDetected) return;
+    
+    updateSaveIndicatorState("saving");
+    
+    const resumeData = getFormData();
+    resumeData.id = loadedResumeId;
+    
+    try {
+        const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/save-resume/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(resumeData),
+            credentials: "include"
+        });
+        
+        if (response.ok) {
+            isDirty = false;
+            originalData = getFormData();
+            lastSavedTime = new Date();
+            updateSaveIndicatorState("saved");
+            
+            if (saveRetryTimer) {
+                clearTimeout(saveRetryTimer);
+                saveRetryTimer = null;
+            }
+        } else {
+            updateSaveIndicatorState("failed");
+            scheduleAutosaveRetry();
+        }
+    } catch (error) {
+        updateSaveIndicatorState("failed");
+        scheduleAutosaveRetry();
+    }
+}
+
+function scheduleAutosaveRetry() {
+    if (saveRetryTimer) clearTimeout(saveRetryTimer);
+    saveRetryTimer = setTimeout(autosaveResume, 5000);
+}
+
+function updateSaveIndicatorState(state) {
+    const indicator = document.getElementById("save-indicator");
+    if (!indicator) return;
+    
+    if (state !== "saved") {
+        clearInterval(saveTimerInterval);
+        saveTimerInterval = null;
+    }
+    
+    if (state === "saving") {
+        indicator.innerHTML = `<span class="spinner" style="width: 10px; height: 10px; border-width: 2px; border-top-color: #ededed; margin-right: 6px; animation-duration: 0.6s;"></span>Saving...`;
+        indicator.style.color = "#a1a1aa";
+    } else if (state === "saved") {
+        indicator.innerHTML = `<span style="color: #10b981;">Saved ✓</span>`;
+        indicator.style.color = "#10b981";
+        
+        if (!saveTimerInterval && lastSavedTime) {
+            saveTimerInterval = setInterval(() => {
+                const diff = Math.round((new Date() - lastSavedTime) / 1000);
+                if (diff < 5) {
+                    indicator.innerHTML = `<span style="color: #10b981;">Saved ✓</span>`;
+                } else {
+                    indicator.innerHTML = `Last saved ${diff}s ago`;
+                    indicator.style.color = "#a1a1aa";
+                }
+            }, 1000);
+        }
+    } else if (state === "dirty") {
+        indicator.innerHTML = `Unsaved changes`;
+        indicator.style.color = "#a1a1aa";
+    } else if (state === "failed") {
+        indicator.innerHTML = `<span style="color: #ef4444;">Save failed. Retrying...</span>`;
+        indicator.style.color = "#ef4444";
+    } else if (state === "conflict") {
+        indicator.innerHTML = `<span style="color: #ef4444;">Conflict: Tab inactive</span>`;
+        indicator.style.color = "#ef4444";
+    }
+}
+
+/* MULTI-TAB CONFLICT DETECTION */
+function setupConflictDetection(resumeId) {
+    if (workspaceChannel) {
+        workspaceChannel.close();
+    }
+    
+    tabConflictDetected = false;
+    const banner = document.getElementById("conflict-banner");
+    if (banner) banner.remove();
+    
+    if (!resumeId) return;
+    
+    workspaceChannel = new BroadcastChannel(`resumify_resume_${resumeId}`);
+    
+    workspaceChannel.onmessage = (event) => {
+        const msg = event.data;
+        if (msg.type === 'ping' && msg.tabId !== tabId) {
+            workspaceChannel.postMessage({ type: 'ack', tabId: tabId });
+            detectConflict();
+        } else if (msg.type === 'ack' && msg.tabId !== tabId) {
+            detectConflict();
+        }
+    };
+    
+    workspaceChannel.postMessage({ type: 'ping', tabId: tabId });
+}
+
+function detectConflict() {
+    if (tabConflictDetected) return;
+    tabConflictDetected = true;
+    
+    clearTimeout(saveDebounceTimeout);
+    clearTimeout(saveRetryTimer);
+    
+    let banner = document.getElementById("conflict-banner");
+    if (!banner) {
+        banner = document.createElement("div");
+        banner.id = "conflict-banner";
+        banner.style = "position: fixed; top: 0; left: 0; right: 0; background: rgba(239, 68, 68, 0.95); backdrop-filter: blur(12px); color: #fff; padding: 12px 24px; text-align: center; font-size: 13px; font-weight: 500; z-index: 10000; box-shadow: 0 4px 20px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; gap: 12px;";
+        banner.innerHTML = `
+            <span>⚠️ Conflict Detected: This resume is open in another tab. Autosave has been disabled to prevent overwriting.</span>
+            <button class="button-primary" style="margin: 0; padding: 4px 12px; font-size: 12px; background: #fff; color: #000; border-color: #fff;" onclick="resolveConflict()">Keep This Tab</button>
+        `;
+        document.body.appendChild(banner);
+    }
+    
+    updateSaveIndicatorState("conflict");
+}
+
+window.resolveConflict = function() {
+    tabConflictDetected = false;
+    const banner = document.getElementById("conflict-banner");
+    if (banner) banner.remove();
+    
+    if (workspaceChannel) {
+        workspaceChannel.postMessage({ type: 'ping', tabId: tabId });
+    }
+    
+    checkDirtyState();
+}
+
+/* WORKSPACE STATE SYNCHRONIZATION */
+async function syncWorkspaceState() {
+    if (!isLoggedIn || !loadedResumeId) return;
+    const leftPanel = document.querySelector('.left');
+    const scrollPos = leftPanel ? leftPanel.scrollTop : 0;
+    const activeTemplateId = activeTemplate ? activeTemplate.id : null;
+    
+    try {
+        await fetch(`${CONFIG.DJANGO_BASE_URL}/api/workspace/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                active_resume_id: loadedResumeId,
+                active_template_id: activeTemplateId,
+                scroll_position: scrollPos,
+                editor_state: {}
+            }),
+            credentials: "include"
+        });
+    } catch (e) {
+        console.error("Failed to sync workspace state", e);
+    }
+}
+
+/* CREATE FIRST RESUME */
+async function createFirstResume() {
+    const resumeData = {
+        name: "My First Resume",
+        email: "",
+        phone: "",
+        linkedin: "",
+        skills: "",
+        education: [],
+        experience: [],
+        projects: [],
+        certifications: [],
+        achievements: [],
+        languages: []
+    };
+    
+    const loader = document.getElementById("workspace-loader");
+    if (loader) {
+        loader.style.display = "flex";
+        loader.style.opacity = "1";
+    }
+    
+    try {
+        const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/save-resume/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(resumeData),
+            credentials: "include"
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            await fetch(`${CONFIG.DJANGO_BASE_URL}/api/workspace/`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    active_resume_id: data.id,
+                    scroll_position: 0,
+                    editor_state: {}
+                }),
+                credentials: "include"
+            });
+            
+            window.location.reload();
+        } else {
+            showToast("Failed to create first resume", "error");
+            if (loader) loader.style.display = "none";
+        }
+    } catch (error) {
+        showToast("Server connection failed", "error");
+        if (loader) loader.style.display = "none";
+    }
+}
+
+/* DJANGO API: SAVE RESUME */
+async function saveResume() {
+    clearTimeout(saveDebounceTimeout);
+    clearTimeout(saveRetryTimer);
+    saveDebounceTimeout = null;
+    saveRetryTimer = null;
+
+    const resumeData = getFormData();
+    if (loadedResumeId) {
+        resumeData.id = loadedResumeId;
+    }
     
     showToast("Saving...", "info");
+    updateSaveIndicatorState("saving");
 
     try {
         const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/save-resume/`, {
@@ -2757,23 +3046,38 @@ async function saveResume() {
         });
 
         if (response.ok) {
+            const data = await response.json();
             showToast("Resume saved successfully", "success");
+            isDirty = false;
+            originalData = getFormData();
+            lastSavedTime = new Date();
+            updateSaveIndicatorState("saved");
+            
+            if (!loadedResumeId) {
+                loadedResumeId = data.id;
+                setupConflictDetection(data.id);
+                syncWorkspaceState();
+            }
+            
             fetchResumes();
         } else if (response.status === 401 || response.status === 403) {
             showToast("Please login first", "error");
+            updateSaveIndicatorState("failed");
         } else {
             showToast("Failed to save resume", "error");
+            updateSaveIndicatorState("failed");
         }
     } catch (error) {
         showToast("Server connection failed!", "error");
+        updateSaveIndicatorState("failed");
     }
 }
 
 /* DJANGO API: FETCH RESUMES */
 async function fetchResumes() {
     const listDiv = document.getElementById("cloudResumesList");
+    if (!listDiv) return;
     listDiv.innerHTML = "<p style='color:#a1a1aa; font-size: 14px;'>Loading...</p>";
-    showToast("Loading resumes...", "info");
 
     try {
         const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/my-resumes/`, {
@@ -2816,26 +3120,31 @@ async function fetchResumes() {
                 const btn = document.createElement("button");
                 btn.className = "button-primary resume-card-btn";
                 btn.innerText = "Load";
-                btn.onclick = () => loadCloudResume(r);
+                btn.onclick = async () => {
+                    loadCloudResume(r);
+                    await syncWorkspaceState();
+                };
                 
                 card.appendChild(btn);
                 listDiv.appendChild(card);
             });
-            showToast("Resumes loaded successfully", "success");
         } else if (response.status === 401 || response.status === 403) {
             listDiv.innerHTML = "<p style='color:#ef4444; font-size: 14px;'>Please login to view resumes.</p>";
-            showToast("Please login first", "error");
         } else {
             listDiv.innerHTML = "<p style='color:#ef4444; font-size: 14px;'>Failed to load resumes.</p>";
-            showToast("Failed to load resumes", "error");
         }
     } catch (error) {
         listDiv.innerHTML = "<p style='color:#ef4444; font-size: 14px;'>Server connection failed!</p>";
-        showToast("Server connection failed!", "error");
     }
 }
 
 function loadCloudResume(data) {
+    clearTimeout(saveDebounceTimeout);
+    clearTimeout(saveRetryTimer);
+    saveDebounceTimeout = null;
+    saveRetryTimer = null;
+
+    loadedResumeId = data.id;
     document.getElementById("name").value = data.name || "";
     document.getElementById("email").value = data.email || "";
     document.getElementById("phone").value = data.phone || "";
@@ -2847,15 +3156,23 @@ function loadCloudResume(data) {
     appendInputs("certificationsContainer", data.certifications || [], addCertifications);
     appendInputs("achievementsContainer", data.achievements || [], addAchievements);
     appendInputs("languagesContainer", data.languages || [], addLanguages);
+    
+    // Set originalData first to avoid triggering autosave in checkDirtyState called by updateLatex
+    originalData = getFormData();
+    
     updateLatex();
+    isDirty = false;
+    lastSavedTime = new Date();
+    updateSaveIndicatorState("saved");
+    setupConflictDetection(data.id);
     showToast("Resume loaded successfully", "success");
 }
 
 /* AUTHENTICATION STATE */
 async function checkAuthStatus() {
     const authNav = document.getElementById("authNav");
+    const loader = document.getElementById("workspace-loader");
     
-    // Show loading indicator
     authNav.innerHTML = `<span class="auth-user" style="display: flex; align-items: center; gap: 6px;"><div class="spinner" style="width: 12px; height: 12px; border-width: 2px;"></div> Checking Auth...</span>`;
     
     try {
@@ -2871,25 +3188,144 @@ async function checkAuthStatus() {
                 <a href="${CONFIG.DJANGO_BASE_URL}/accounts/logout/" class="auth-btn">Logout</a>
             `;
             isLoggedIn = true;
+            
+            await fetchTemplates();
+            await fetchMyTemplates();
+            
+            const wsResponse = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/workspace/`, {
+                method: "GET",
+                credentials: "include"
+            });
+            
+            if (wsResponse.ok) {
+                const wsData = await wsResponse.json();
+                const activeResumeId = wsData.active_resume_id;
+                const activeTemplateId = wsData.active_template_id;
+                
+                const resumesResponse = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/my-resumes/`, {
+                    method: "GET",
+                    credentials: "include"
+                });
+                
+                if (resumesResponse.ok) {
+                    const resumesData = await resumesResponse.json();
+                    
+                    let targetResume = null;
+                    if (activeResumeId) {
+                        targetResume = resumesData.find(r => r.id === activeResumeId);
+                    }
+                    
+                    if (targetResume) {
+                        loadCloudResume(targetResume);
+                        
+                        if (activeTemplateId) {
+                            let template = publicTemplates.find(t => Number(t.id) === Number(activeTemplateId));
+                            if (!template) {
+                                const myTemp = myTemplates.find(mt => mt.template_details && Number(mt.template_details.id) === Number(activeTemplateId));
+                                if (myTemp) template = myTemp.template_details;
+                            }
+                            if (template) {
+                                activeTemplate = template;
+                                const templateNameSpan = document.getElementById("currentTemplateName");
+                                if (templateNameSpan) templateNameSpan.innerText = template.name;
+                                renderTemplates();
+                                renderMyTemplates();
+                            }
+                        } else {
+                            await loadSelectedTemplate();
+                        }
+                        
+                        updateLatex();
+                        
+                        const leftPanel = document.querySelector('.left');
+                        if (leftPanel) {
+                            setTimeout(() => {
+                                leftPanel.scrollTop = wsData.scroll_position || 0;
+                            }, 100);
+                        }
+                    } else {
+                        fallbackToMostRecentOrEmpty(resumesData);
+                    }
+                } else {
+                    fallbackToMostRecentOrEmpty([]);
+                }
+            }
         } else {
-            authNav.innerHTML = `
-                <a href="${CONFIG.DJANGO_BASE_URL}/accounts/login/?next=${CONFIG.FRONTEND_URL}/" class="auth-btn">Login</a>
-                <a href="${CONFIG.DJANGO_BASE_URL}/accounts/signup/?next=${CONFIG.FRONTEND_URL}/" class="auth-btn auth-btn-primary">Sign Up</a>
-            `;
-            isLoggedIn = false;
+            handleGuestFlow();
         }
     } catch (error) {
-        authNav.innerHTML = `
-            <a href="${CONFIG.DJANGO_BASE_URL}/accounts/login/?next=${CONFIG.FRONTEND_URL}/" class="auth-btn">Login</a>
-            <a href="${CONFIG.DJANGO_BASE_URL}/accounts/signup/?next=${CONFIG.FRONTEND_URL}/" class="auth-btn auth-btn-primary">Sign Up</a>
-        `;
-        isLoggedIn = false;
+        console.error("Auth check failed", error);
+        handleGuestFlow();
+    } finally {
+        if (loader) {
+            loader.style.opacity = "0";
+            setTimeout(() => { loader.style.display = "none"; }, 500);
+        }
     }
-
-    await fetchTemplates();
-    await fetchMyTemplates();
-    await loadSelectedTemplate();
 }
+
+function fallbackToMostRecentOrEmpty(resumesData) {
+    const mainView = document.querySelector(".main");
+    const emptyState = document.getElementById("empty-state-view");
+    
+    if (resumesData && resumesData.length > 0) {
+        const recent = resumesData[0];
+        loadCloudResume(recent);
+        syncWorkspaceState();
+    } else {
+        if (mainView) mainView.style.display = "none";
+        if (emptyState) emptyState.style.display = "flex";
+    }
+}
+
+function handleGuestFlow() {
+    isLoggedIn = false;
+    const authNav = document.getElementById("authNav");
+    authNav.innerHTML = `
+        <a href="${CONFIG.DJANGO_BASE_URL}/accounts/login/?next=${CONFIG.FRONTEND_URL}/" class="auth-btn">Login</a>
+        <a href="${CONFIG.DJANGO_BASE_URL}/accounts/signup/?next=${CONFIG.FRONTEND_URL}/" class="auth-btn auth-btn-primary">Sign Up</a>
+    `;
+    
+    fetchTemplates().then(() => {
+        fetchMyTemplates().then(() => {
+            loadSelectedTemplate();
+        });
+    });
+    
+    if (!loadDraft()) {
+        addEducation();
+        addExperience();
+        addProject();
+        addCertifications();
+        addAchievements();
+        addLanguages();
+    }
+    updateLatex();
+}
+
+/* LEAVE CHECK & SCROLL LISTENER */
+document.addEventListener("DOMContentLoaded", () => {
+    const leftPanel = document.querySelector('.left');
+    let scrollSyncTimeout = null;
+    if (leftPanel) {
+        leftPanel.addEventListener('scroll', () => {
+            if (isLoggedIn && loadedResumeId) {
+                clearTimeout(scrollSyncTimeout);
+                scrollSyncTimeout = setTimeout(syncWorkspaceState, 1000);
+            }
+        });
+    }
+});
+
+window.addEventListener('beforeunload', (e) => {
+    if (workspaceChannel) {
+        workspaceChannel.close();
+    }
+    if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
 
 </script>
 

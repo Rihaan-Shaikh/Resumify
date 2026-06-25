@@ -20,7 +20,7 @@ from django.http import HttpResponse
 from users.views import (
     SaveResumeView, MyResumesView, CurrentUserView,
     TemplateListView, SaveTemplateView, MyTemplatesView, FavoriteTemplateView,
-    UserSelectedTemplateView,
+    UserSelectedTemplateView, WorkspaceView,
     ForgotPasswordView, RecoveryCodeView, ResetPasswordConfirmView, ResetPasswordSuccessView
 )
 
@@ -38,6 +38,7 @@ urlpatterns = [
     path('api/my-resumes/', MyResumesView.as_view(), name='my-resumes'),
     path('api/me/', CurrentUserView.as_view(), name='current-user'),
     path('api/me/selected-template/', UserSelectedTemplateView.as_view(), name='selected-template'),
+    path('api/workspace/', WorkspaceView.as_view(), name='workspace'),
 
     
     # Template Library APIs

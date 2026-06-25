@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APIClient
-from .models import ResumeTemplate, UserTemplate
+from .models import ResumeTemplate, UserTemplate, Resume, UserWorkspace
 
 class TemplateAPITests(TestCase):
     def setUp(self):
@@ -338,6 +338,190 @@ class PasswordResetTests(TestCase):
         })
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Invalid recovery code format")
+
+
+class WorkspaceAndResumeTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(username='workspace_user', password='password123')
+        self.other_user = User.objects.create_user(username='other_user', password='password123')
+        
+        self.template = ResumeTemplate.objects.create(
+            name="Workspace Template",
+            category="Academic",
+            description="A template for testing workspace features",
+            latex_template="[[NAME]]",
+            is_public=True
+        )
+        
+        self.resume1 = Resume.objects.create(
+            user=self.user,
+            name="First Resume",
+            email="user1@example.com",
+            phone="12345",
+            linkedin="linkedin.com/1",
+            skills="Python",
+            education=[],
+            experience=[],
+            projects=[],
+            certifications=[],
+            achievements=[],
+            languages=[]
+        )
+        
+        self.resume2 = Resume.objects.create(
+            user=self.user,
+            name="Second Resume",
+            email="user2@example.com",
+            phone="67890",
+            linkedin="linkedin.com/2",
+            skills="Django",
+            education=[],
+            experience=[],
+            projects=[],
+            certifications=[],
+            achievements=[],
+            languages=[]
+        )
+
+    def test_save_resume_create_new(self):
+        """Test creating a new resume via SaveResumeView POST without ID"""
+        self.client.force_authenticate(user=self.user)
+        url = reverse('save-resume')
+        data = {
+            "name": "New Brand Resume",
+            "email": "new@example.com",
+            "phone": "555-5555",
+            "linkedin": "linkedin.com/new",
+            "skills": "Go, Rust",
+            "education": ["B.S. CS"],
+            "experience": [],
+            "projects": [],
+            "certifications": [],
+            "achievements": [],
+            "languages": []
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn('id', response.data)
+        self.assertEqual(response.data['name'], "New Brand Resume")
+        # Verify db
+        self.assertEqual(Resume.objects.filter(user=self.user, name="New Brand Resume").count(), 1)
+
+    def test_save_resume_partial_update(self):
+        """Test updating an existing resume via SaveResumeView POST with ID"""
+        self.client.force_authenticate(user=self.user)
+        url = reverse('save-resume')
+        data = {
+            "id": self.resume1.id,
+            "name": "Updated Name",
+            "skills": "Updated Skills",
+            "education": self.resume1.education,
+            "experience": self.resume1.experience,
+            "projects": self.resume1.projects,
+            "certifications": self.resume1.certifications,
+            "achievements": self.resume1.achievements,
+            "languages": self.resume1.languages
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.resume1.refresh_from_db()
+        self.assertEqual(self.resume1.name, "Updated Name")
+        self.assertEqual(self.resume1.skills, "Updated Skills")
+
+    def test_save_resume_not_owned(self):
+        """Test that updating a resume owned by another user fails with 404"""
+        self.client.force_authenticate(user=self.other_user)
+        url = reverse('save-resume')
+        data = {
+            "id": self.resume1.id,
+            "name": "Hacked Name"
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_workspace_get_creates_default(self):
+        """Test GET /api/workspace/ creates a workspace if it doesn't exist"""
+        # User workspace does not exist initially
+        self.assertFalse(UserWorkspace.objects.filter(user=self.user).exists())
+        
+        self.client.force_authenticate(user=self.user)
+        url = reverse('workspace')
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Should auto-select the most recently updated resume
+        self.assertEqual(response.data['active_resume_id'], self.resume2.id)
+        self.assertEqual(response.data['active_template_id'], None)
+        self.assertEqual(response.data['scroll_position'], 0)
+        self.assertEqual(response.data['editor_state'], {})
+        
+        self.assertTrue(UserWorkspace.objects.filter(user=self.user).exists())
+
+    def test_workspace_post_updates_fields(self):
+        """Test POST /api/workspace/ updates the user's workspace"""
+        self.client.force_authenticate(user=self.user)
+        url = reverse('workspace')
+        data = {
+            "active_resume_id": self.resume1.id,
+            "active_template_id": self.template.id,
+            "scroll_position": 250,
+            "editor_state": {"section": "education"}
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['active_resume_id'], self.resume1.id)
+        self.assertEqual(response.data['active_template_id'], self.template.id)
+        self.assertEqual(response.data['scroll_position'], 250)
+        self.assertEqual(response.data['editor_state'], {"section": "education"})
+        
+        workspace = UserWorkspace.objects.get(user=self.user)
+        self.assertEqual(workspace.active_resume, self.resume1)
+        self.assertEqual(workspace.active_template, self.template)
+        self.assertEqual(workspace.scroll_position, 250)
+        self.assertEqual(workspace.editor_state, {"section": "education"})
+
+    def test_workspace_resume_ownership(self):
+        """Test that a user cannot set another user's resume as their active resume"""
+        self.client.force_authenticate(user=self.other_user)
+        url = reverse('workspace')
+        data = {
+            "active_resume_id": self.resume1.id
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Should be None since the resume is not owned by other_user
+        self.assertEqual(response.data['active_resume_id'], None)
+
+    def test_workspace_get_cleans_deleted_resume(self):
+        """Test that GET /api/workspace/ sets active_resume to None if the resume was deleted"""
+        workspace = UserWorkspace.objects.create(user=self.user, active_resume=self.resume1)
+        
+        # Delete resume1
+        self.resume1.delete()
+        
+        self.client.force_authenticate(user=self.user)
+        url = reverse('workspace')
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['active_resume_id'], self.resume2.id)
+
+    def test_workspace_get_auto_selects_recent_resume(self):
+        """Test that GET /api/workspace/ selects the most recently edited resume"""
+        workspace = UserWorkspace.objects.create(user=self.user, active_resume=None)
+        
+        # Touch resume1 to make it more recently updated
+        self.resume1.name = "First Resume Updated"
+        self.resume1.save()
+        
+        self.client.force_authenticate(user=self.user)
+        url = reverse('workspace')
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['active_resume_id'], self.resume1.id)
+
 
 
 

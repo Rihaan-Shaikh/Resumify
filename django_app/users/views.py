@@ -15,7 +15,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 
-from .models import Resume, ResumeTemplate, UserTemplate, UserSelectedTemplate, PasswordRecovery
+from .models import Resume, ResumeTemplate, UserTemplate, UserSelectedTemplate, PasswordRecovery, UserWorkspace
 from .serializers import ResumeSerializer, ResumeTemplateSerializer, UserTemplateSerializer
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -27,11 +27,89 @@ class SaveResumeView(APIView):
     authentication_classes = (CsrfExemptSessionAuthentication,)
 
     def post(self, request, *args, **kwargs):
-        serializer = ResumeSerializer(data=request.data)
+        resume_id = request.data.get('id')
+        instance = None
+        if resume_id:
+            try:
+                instance = Resume.objects.get(id=resume_id, user=request.user)
+            except Resume.DoesNotExist:
+                return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = ResumeSerializer(instance, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save(user=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_200_OK if instance else status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class WorkspaceView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = (CsrfExemptSessionAuthentication,)
+
+    def get(self, request, *args, **kwargs):
+        workspace, created = UserWorkspace.objects.get_or_create(user=request.user)
+        
+        if workspace.active_resume and not Resume.objects.filter(id=workspace.active_resume.id, user=request.user).exists():
+            workspace.active_resume = None
+            
+        if not workspace.active_resume:
+            recent_resume = Resume.objects.filter(user=request.user).order_by('-updated_at').first()
+            if recent_resume:
+                workspace.active_resume = recent_resume
+                workspace.save()
+                
+        if workspace.active_template and not ResumeTemplate.objects.filter(id=workspace.active_template.id).exists():
+            workspace.active_template = None
+            workspace.save()
+
+        return Response({
+            "active_resume_id": workspace.active_resume.id if workspace.active_resume else None,
+            "active_template_id": workspace.active_template.id if workspace.active_template else None,
+            "scroll_position": workspace.scroll_position,
+            "editor_state": workspace.editor_state
+        }, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        workspace, created = UserWorkspace.objects.get_or_create(user=request.user)
+        
+        active_resume_id = request.data.get('active_resume_id')
+        if active_resume_id is not None:
+            if active_resume_id == "" or active_resume_id is False:
+                workspace.active_resume = None
+            else:
+                try:
+                    workspace.active_resume = Resume.objects.get(id=active_resume_id, user=request.user)
+                except Resume.DoesNotExist:
+                    workspace.active_resume = None
+                    
+        active_template_id = request.data.get('active_template_id')
+        if active_template_id is not None:
+            if active_template_id == "" or active_template_id is False:
+                workspace.active_template = None
+            else:
+                try:
+                    workspace.active_template = ResumeTemplate.objects.get(id=active_template_id)
+                except ResumeTemplate.DoesNotExist:
+                    pass
+                    
+        scroll_position = request.data.get('scroll_position')
+        if scroll_position is not None:
+            try:
+                workspace.scroll_position = int(scroll_position)
+            except (ValueError, TypeError):
+                pass
+                
+        editor_state = request.data.get('editor_state')
+        if editor_state is not None:
+            if isinstance(editor_state, dict):
+                workspace.editor_state = editor_state
+                
+        workspace.save()
+        return Response({
+            "active_resume_id": workspace.active_resume.id if workspace.active_resume else None,
+            "active_template_id": workspace.active_template.id if workspace.active_template else None,
+            "scroll_position": workspace.scroll_position,
+            "editor_state": workspace.editor_state
+        }, status=status.HTTP_200_OK)
 
 class MyResumesView(APIView):
     permission_classes = [IsAuthenticated]
