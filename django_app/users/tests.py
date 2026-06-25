@@ -93,3 +93,29 @@ class TemplateAPITests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data['favorite'])
 
+
+from django.core import mail
+
+class PasswordResetTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='resetuser', email='reset@example.com', password='oldpassword')
+
+    def test_password_reset_page_loads(self):
+        url = reverse('account_reset_password')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Reset Password")
+
+    def test_password_reset_submits_email(self):
+        url = reverse('account_reset_password')
+        response = self.client.post(url, {'email': 'reset@example.com'})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('account_reset_password_done'))
+        
+        # Follow the redirect
+        redirected_response = self.client.get(reverse('account_reset_password_done'))
+        self.assertEqual(redirected_response.status_code, 200)
+        self.assertContains(redirected_response, "Reset Link Sent")
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("Password Reset Request", mail.outbox[0].subject)
+
