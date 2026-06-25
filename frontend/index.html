@@ -1311,7 +1311,9 @@ const DEFAULT_LATEX_TEMPLATE = `\\documentclass[11pt,a4paper]{article}
 async function fetchTemplates() {
     const listDiv = document.getElementById("templateLibraryList");
     try {
-        const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/templates/`);
+        const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/templates/`, {
+            credentials: "include"
+        });
         if (response.ok) {
             publicTemplates = await response.json();
             renderTemplates();

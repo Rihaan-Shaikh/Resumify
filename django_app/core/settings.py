@@ -158,8 +158,8 @@ STATIC_URL = 'static/'
 SITE_ID = 1
 
 LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = 'https://resumify-sand-eta.vercel.app/'
-LOGOUT_REDIRECT_URL = 'https://resumify-sand-eta.vercel.app/'
+LOGIN_REDIRECT_URL = os.environ.get('DJANGO_LOGIN_REDIRECT_URL', 'https://resumify-sand-eta.vercel.app/')
+LOGOUT_REDIRECT_URL = os.environ.get('DJANGO_LOGOUT_REDIRECT_URL', 'https://resumify-sand-eta.vercel.app/')
 
 ACCOUNT_LOGIN_METHODS = {'email', 'username'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
@@ -172,11 +172,11 @@ AUTHENTICATION_BACKENDS = (
 )
 
 # -------------------- SESSION / CSRF --------------------
-SESSION_COOKIE_SAMESITE = 'Lax'
-CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SAMESITE = 'None'
 
-SESSION_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = False
 CSRF_USE_SESSIONS = False
 
