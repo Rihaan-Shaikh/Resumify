@@ -522,6 +522,85 @@ class WorkspaceAndResumeTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['active_resume_id'], self.resume1.id)
 
+    def test_save_resume_blank_fields_creation(self):
+        """Test that we can create a resume with completely blank optional fields"""
+        self.client.force_authenticate(user=self.user)
+        url = reverse('save-resume')
+        data = {
+            "name": "Blank Resume Name",
+            "email": "",
+            "phone": "",
+            "linkedin": "",
+            "skills": "",
+            "education": [],
+            "experience": [],
+            "projects": [],
+            "certifications": [],
+            "achievements": [],
+            "languages": []
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['email'], "")
+        self.assertEqual(response.data['phone'], "")
+        self.assertEqual(response.data['linkedin'], "")
+        self.assertEqual(response.data['skills'], "")
+        self.assertEqual(response.data['education'], [])
+        self.assertEqual(response.data['experience'], [])
+        self.assertEqual(response.data['projects'], [])
+        self.assertEqual(response.data['certifications'], [])
+        self.assertEqual(response.data['achievements'], [])
+        self.assertEqual(response.data['languages'], [])
+
+    def test_save_resume_blank_fields_partial_update(self):
+        """Test that we can update an existing resume to clear all optional fields"""
+        self.client.force_authenticate(user=self.user)
+        url = reverse('save-resume')
+        data = {
+            "id": self.resume1.id,
+            "name": "Cleared Fields Resume",
+            "email": "",
+            "phone": "",
+            "linkedin": "",
+            "skills": "",
+            "education": [],
+            "experience": [],
+            "projects": [],
+            "certifications": [],
+            "achievements": [],
+            "languages": []
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.resume1.refresh_from_db()
+        self.assertEqual(self.resume1.email, "")
+        self.assertEqual(self.resume1.phone, "")
+        self.assertEqual(self.resume1.linkedin, "")
+        self.assertEqual(self.resume1.skills, "")
+        self.assertEqual(self.resume1.education, [])
+        self.assertEqual(self.resume1.experience, [])
+
+    def test_save_resume_email_validation_still_enforced(self):
+        """Test that email format validation is still active if a non-empty invalid email is provided"""
+        self.client.force_authenticate(user=self.user)
+        url = reverse('save-resume')
+        data = {
+            "name": "Invalid Email Resume",
+            "email": "invalid-email-format-without-at",
+            "phone": "",
+            "linkedin": "",
+            "skills": "",
+            "education": [],
+            "experience": [],
+            "projects": [],
+            "certifications": [],
+            "achievements": [],
+            "languages": []
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('email', response.data)
+
 
 
 
