@@ -119,3 +119,47 @@ class PasswordResetTests(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn("Password Reset Request", mail.outbox[0].subject)
 
+
+from unittest.mock import patch, MagicMock
+from core.email_backends import ResendEmailBackend
+from django.core.mail import EmailMessage
+from django.core.exceptions import ImproperlyConfigured
+
+class ResendEmailBackendTests(TestCase):
+    @patch.dict('os.environ', {}, clear=True)
+    def test_missing_api_key_raises_improperly_configured(self):
+        with self.assertRaises(ImproperlyConfigured):
+            ResendEmailBackend()
+
+    @patch.dict('os.environ', {'RESEND_API_KEY': 're_testkey'})
+    @patch('requests.post')
+    def test_send_message_success(self, mock_post):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_post.return_value = mock_response
+
+        backend = ResendEmailBackend()
+        email = EmailMessage(
+            subject='Test Subject',
+            body='Test Body',
+            from_email='onboarding@resend.dev',
+            to=['recipient@example.com']
+        )
+        
+        num_sent = backend.send_messages([email])
+        self.assertEqual(num_sent, 1)
+        mock_post.assert_called_once_with(
+            "https://api.resend.com/emails",
+            json={
+                "from": "onboarding@resend.dev",
+                "to": ["recipient@example.com"],
+                "subject": "Test Subject",
+                "text": "Test Body"
+            },
+            headers={
+                "Authorization": "Bearer re_testkey",
+                "Content-Type": "application/json"
+            },
+            timeout=10
+        )
+
