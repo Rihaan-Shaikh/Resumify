@@ -53,3 +53,18 @@ class UserSelectedTemplate(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.template.name}"
 
+
+class PasswordRecovery(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='password_recovery')
+    code_hash = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    attempts = models.IntegerField(default=0)
+    used = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name_plural = "Password Recoveries"
+
+    def __str__(self):
+        return f"Recovery for {self.user.username} (attempts: {self.attempts})"
+

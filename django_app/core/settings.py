@@ -190,10 +190,5 @@ REST_FRAMEWORK = {
     ],
 }
 
-# -------------------- EMAIL / SMTP / API --------------------
-if os.environ.get('RESEND_API_KEY'):
-    EMAIL_BACKEND = 'core.email_backends.ResendEmailBackend'
-else:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-DEFAULT_FROM_EMAIL = os.environ.get('DJANGO_DEFAULT_FROM_EMAIL', 'Resumify <onboarding@resend.dev>')
+# -------------------- EMAIL --------------------
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

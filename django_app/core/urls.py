@@ -20,7 +20,8 @@ from django.http import HttpResponse
 from users.views import (
     SaveResumeView, MyResumesView, CurrentUserView,
     TemplateListView, SaveTemplateView, MyTemplatesView, FavoriteTemplateView,
-    UserSelectedTemplateView
+    UserSelectedTemplateView,
+    ForgotPasswordView, RecoveryCodeView, ResetPasswordConfirmView, ResetPasswordSuccessView
 )
 
 def home(request):
@@ -28,6 +29,10 @@ def home(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('accounts/password/reset/', ForgotPasswordView.as_view(), name='account_reset_password'),
+    path('accounts/password/reset/code/', RecoveryCodeView.as_view(), name='account_reset_password_code'),
+    path('accounts/password/reset/confirm/', ResetPasswordConfirmView.as_view(), name='account_reset_password_confirm'),
+    path('accounts/password/reset/success/', ResetPasswordSuccessView.as_view(), name='account_reset_password_success'),
     path('accounts/', include('allauth.urls')),
     path('api/save-resume/', SaveResumeView.as_view(), name='save-resume'),
     path('api/my-resumes/', MyResumesView.as_view(), name='my-resumes'),
