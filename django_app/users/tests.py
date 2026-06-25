@@ -601,6 +601,99 @@ class WorkspaceAndResumeTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('email', response.data)
 
+    def test_resume_naming_defaults(self):
+        """Test that new resumes without a name auto-generate default numbered names"""
+        self.client.force_authenticate(user=self.user)
+        # Delete existing to start clean
+        Resume.objects.filter(user=self.user).delete()
+        
+        url = reverse('save-resume')
+        # 1st Untitled
+        response = self.client.post(url, {}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['name'], "Untitled Resume")
+        
+        # 2nd Untitled
+        response = self.client.post(url, {}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['name'], "Untitled Resume (2)")
+        
+        # 3rd Untitled
+        response = self.client.post(url, {}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['name'], "Untitled Resume (3)")
+
+    def test_resume_renaming_validation(self):
+        """Test that renaming a resume trims whitespace and rejects empty names"""
+        self.client.force_authenticate(user=self.user)
+        url = reverse('save-resume')
+        
+        # Test valid rename with trimming
+        data = {"id": self.resume1.id, "name": "   Trimmed Name   "}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.resume1.refresh_from_db()
+        self.assertEqual(self.resume1.name, "Trimmed Name")
+        
+        # Test empty name rejection
+        data = {"id": self.resume1.id, "name": "    "}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        
+        # Test missing name parameter during save does not reject partial update if other fields are updated
+        data = {"id": self.resume1.id, "skills": "Go, Python"}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_duplicate_resume(self):
+        """Test duplicating a resume and copying its template assignment"""
+        self.client.force_authenticate(user=self.user)
+        
+        # Associate template with resume1
+        self.resume1.template = self.template
+        self.resume1.save()
+        
+        url = reverse('duplicate-resume', kwargs={'id': self.resume1.id})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['name'], "First Resume Copy")
+        self.assertEqual(response.data['template'], self.template.id)
+        
+        # Duplicate again
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['name'], "First Resume Copy (2)")
+        
+        # Verify database
+        dup = Resume.objects.get(name="First Resume Copy")
+        self.assertEqual(dup.skills, self.resume1.skills)
+        self.assertEqual(dup.template, self.template)
+
+    def test_delete_resume_and_fallbacks(self):
+        """Test deleting resumes, fallback selection, and automatic new blank resume generation"""
+        self.client.force_authenticate(user=self.user)
+        workspace = UserWorkspace.objects.create(user=self.user, active_resume=self.resume2)
+        
+        # Delete resume2 (currently active). It should fallback to resume1 since it's the next recent.
+        url = reverse('delete-resume', kwargs={'id': self.resume2.id})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['active_resume_id'], self.resume1.id)
+        workspace.refresh_from_db()
+        self.assertEqual(workspace.active_resume, self.resume1)
+        
+        # Delete resume1. Now no resumes are left, a new blank resume should be auto-created.
+        url = reverse('delete-resume', kwargs={'id': self.resume1.id})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        new_active_id = response.data['active_resume_id']
+        self.assertIsNotNone(new_active_id)
+        
+        workspace.refresh_from_db()
+        self.assertEqual(workspace.active_resume.id, new_active_id)
+        self.assertEqual(workspace.active_resume.name, "Untitled Resume")
+        self.assertEqual(workspace.active_resume.skills, "")
+
 
 
 

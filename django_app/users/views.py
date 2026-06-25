@@ -22,6 +22,16 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
     def enforce_csrf(self, request):
         return
 
+def get_next_untitled_name(user) -> str:
+    base_name = "Untitled Resume"
+    existing_names = set(Resume.objects.filter(user=user, name__startswith=base_name).values_list('name', flat=True))
+    if base_name not in existing_names:
+        return base_name
+    i = 2
+    while f"{base_name} ({i})" in existing_names:
+        i += 1
+    return f"{base_name} ({i})"
+
 class SaveResumeView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = (CsrfExemptSessionAuthentication,)
@@ -35,7 +45,23 @@ class SaveResumeView(APIView):
             except Resume.DoesNotExist:
                 return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
         
-        serializer = ResumeSerializer(instance, data=request.data, partial=True)
+        # Trim name and handle defaults / empty names validation
+        data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
+        name = data.get('name', '')
+        if isinstance(name, str):
+            name = name.strip()
+            
+        if not instance:
+            if not name:
+                name = get_next_untitled_name(request.user)
+            data['name'] = name
+        else:
+            if 'name' in data:
+                if not name:
+                    return Response({"error": "Resume name cannot be empty"}, status=status.HTTP_400_BAD_REQUEST)
+                data['name'] = name
+
+        serializer = ResumeSerializer(instance, data=data, partial=True)
         if serializer.is_valid():
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_200_OK if instance else status.HTTP_201_CREATED)
@@ -61,9 +87,24 @@ class WorkspaceView(APIView):
             workspace.active_template = None
             workspace.save()
 
+        # Determine the template associated with the active resume
+        active_temp_id = None
+        if workspace.active_resume:
+            if workspace.active_resume.template:
+                active_temp_id = workspace.active_resume.template.id
+                if workspace.active_template != workspace.active_resume.template:
+                    workspace.active_template = workspace.active_resume.template
+                    workspace.save()
+            else:
+                if workspace.active_template:
+                    active_temp_id = workspace.active_template.id
+        else:
+            if workspace.active_template:
+                active_temp_id = workspace.active_template.id
+
         return Response({
             "active_resume_id": workspace.active_resume.id if workspace.active_resume else None,
-            "active_template_id": workspace.active_template.id if workspace.active_template else None,
+            "active_template_id": active_temp_id,
             "scroll_position": workspace.scroll_position,
             "editor_state": workspace.editor_state
         }, status=status.HTTP_200_OK)
@@ -78,6 +119,8 @@ class WorkspaceView(APIView):
             else:
                 try:
                     workspace.active_resume = Resume.objects.get(id=active_resume_id, user=request.user)
+                    if workspace.active_resume.template:
+                        workspace.active_template = workspace.active_resume.template
                 except Resume.DoesNotExist:
                     workspace.active_resume = None
                     
@@ -85,9 +128,16 @@ class WorkspaceView(APIView):
         if active_template_id is not None:
             if active_template_id == "" or active_template_id is False:
                 workspace.active_template = None
+                if workspace.active_resume:
+                    workspace.active_resume.template = None
+                    workspace.active_resume.save()
             else:
                 try:
-                    workspace.active_template = ResumeTemplate.objects.get(id=active_template_id)
+                    template_obj = ResumeTemplate.objects.get(id=active_template_id)
+                    workspace.active_template = template_obj
+                    if workspace.active_resume:
+                        workspace.active_resume.template = template_obj
+                        workspace.active_resume.save()
                 except ResumeTemplate.DoesNotExist:
                     pass
                     
@@ -104,19 +154,114 @@ class WorkspaceView(APIView):
                 workspace.editor_state = editor_state
                 
         workspace.save()
+        
+        # Get active template id mapped to active resume if any
+        active_temp_id = None
+        if workspace.active_resume and workspace.active_resume.template:
+            active_temp_id = workspace.active_resume.template.id
+        elif workspace.active_template:
+            active_temp_id = workspace.active_template.id
+
         return Response({
             "active_resume_id": workspace.active_resume.id if workspace.active_resume else None,
-            "active_template_id": workspace.active_template.id if workspace.active_template else None,
+            "active_template_id": active_temp_id,
             "scroll_position": workspace.scroll_position,
             "editor_state": workspace.editor_state
         }, status=status.HTTP_200_OK)
+
+class DeleteResumeView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = (CsrfExemptSessionAuthentication,)
+
+    def delete(self, request, id, *args, **kwargs):
+        try:
+            resume = Resume.objects.get(id=id, user=request.user)
+        except Resume.DoesNotExist:
+            return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        workspace, created = UserWorkspace.objects.get_or_create(user=request.user)
+        is_active = (workspace.active_resume == resume)
+        
+        resume.delete()
+        
+        fallback_resume_id = None
+        if is_active:
+            recent = Resume.objects.filter(user=request.user).order_by('-updated_at').first()
+            if recent:
+                workspace.active_resume = recent
+                fallback_resume_id = recent.id
+                if recent.template:
+                    workspace.active_template = recent.template
+                else:
+                    workspace.active_template = None
+            else:
+                new_name = get_next_untitled_name(request.user)
+                new_resume = Resume.objects.create(
+                    user=request.user,
+                    name=new_name,
+                    email="",
+                    phone="",
+                    linkedin="",
+                    skills=""
+                )
+                workspace.active_resume = new_resume
+                workspace.active_template = None
+                fallback_resume_id = new_resume.id
+            workspace.save()
+        else:
+            if workspace.active_resume:
+                fallback_resume_id = workspace.active_resume.id
+                
+        return Response({
+            "success": True,
+            "active_resume_id": fallback_resume_id
+        }, status=status.HTTP_200_OK)
+
+class DuplicateResumeView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = (CsrfExemptSessionAuthentication,)
+
+    def post(self, request, id, *args, **kwargs):
+        try:
+            original = Resume.objects.get(id=id, user=request.user)
+        except Resume.DoesNotExist:
+            return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        base_name = f"{original.name} Copy"
+        existing_names = set(Resume.objects.filter(user=request.user, name__startswith=base_name).values_list('name', flat=True))
+        
+        dup_name = base_name
+        if dup_name in existing_names:
+            i = 2
+            while f"{base_name} ({i})" in existing_names:
+                i += 1
+            dup_name = f"{base_name} ({i})"
+            
+        duplicate = Resume.objects.create(
+            user=request.user,
+            name=dup_name,
+            email=original.email,
+            phone=original.phone,
+            linkedin=original.linkedin,
+            skills=original.skills,
+            education=original.education,
+            experience=original.experience,
+            projects=original.projects,
+            certifications=original.certifications,
+            achievements=original.achievements,
+            languages=original.languages,
+            template=original.template
+        )
+        
+        serializer = ResumeSerializer(duplicate)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class MyResumesView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = (CsrfExemptSessionAuthentication,)
 
     def get(self, request, *args, **kwargs):
-        resumes = Resume.objects.filter(user=request.user).order_by('-created_at')
+        resumes = Resume.objects.filter(user=request.user).order_by('-updated_at')
         serializer = ResumeSerializer(resumes, many=True)
         return Response(serializer.data)
 

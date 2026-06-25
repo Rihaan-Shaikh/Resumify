@@ -8,6 +8,7 @@ class Resume(models.Model):
     phone = models.CharField(max_length=20, blank=True, default="")
     linkedin = models.CharField(max_length=200, blank=True, default="")
     skills = models.TextField(blank=True, default="")
+    template = models.ForeignKey('ResumeTemplate', on_delete=models.SET_NULL, null=True, blank=True)
 
     education = models.JSONField(default=list, blank=True)
     experience = models.JSONField(default=list, blank=True)

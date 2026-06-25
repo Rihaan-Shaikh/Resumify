@@ -1071,6 +1071,170 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
     outline: 2px solid #10b981;
     outline-offset: 2.5px;
 }
+
+/* RESUME MANAGER PANEL & ITEMS */
+.resume-manager-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.resume-manager-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.resume-manager-item.active {
+    background: rgba(16, 185, 129, 0.03);
+    border-color: rgba(16, 185, 129, 0.25);
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.05);
+}
+
+.resume-manager-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.resume-manager-title-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.resume-manager-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ededed;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.resume-manager-title-input {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ededed;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid #10b981;
+    border-radius: 4px;
+    padding: 4px 8px;
+    margin: 0;
+    width: 100%;
+    outline: none;
+}
+
+.resume-manager-active-badge {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.resume-manager-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    color: #a1a1aa;
+}
+
+.resume-manager-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.resume-manager-meta-label {
+    color: #555;
+    text-transform: uppercase;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.resume-manager-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+}
+
+.resume-manager-btn {
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #1a1a1a;
+    color: #a1a1aa;
+    border: 1px solid #333;
+    transition: all 0.2s ease;
+    margin: 0;
+    box-shadow: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.resume-manager-btn:hover {
+    background: #2a2a2a;
+    color: #ededed;
+    border-color: #555;
+}
+
+.resume-manager-btn-primary {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ededed;
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.resume-manager-btn-primary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.resume-manager-btn-danger {
+    background: rgba(239, 68, 68, 0.05);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.15);
+}
+
+.resume-manager-btn-danger:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.25);
+    color: #ff6b6b;
+}
+
+.resume-manager-confirm-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: rgba(239, 68, 68, 0.03);
+    border: 1px dashed rgba(239, 68, 68, 0.2);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-top: 4px;
+}
 </style>
 
 </head>
@@ -1179,16 +1343,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
         </div>
     </div>
 
-    <div class="card">
-        <h3>Cloud Storage</h3>
-        <button onclick="saveResume()" style="background-color: #2563eb; color: #fff; border-color: #1d4ed8;">☁ Save to Cloud</button>
-        <button onclick="fetchResumes()">☁ Load Resumes</button>
-    </div>
-
-    <div class="card">
-        <h3>My Resumes</h3>
-        <div id="cloudResumesList" style="max-height: 360px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 4px;">
-            <p style="color:#666; font-size: 14px;">Click "Load Resumes" to fetch your saved resumes.</p>
+    <div class="card" id="resume-manager-card">
+        <h3>Resume Manager</h3>
+        <button class="button-primary" id="new-resume-btn" onclick="createNewResumeWorkflow()" style="background-color: #10b981; border-color: #059669; color: #fff; width: 100%; margin: 0 0 16px 0; font-size: 13px; font-weight: 600; padding: 10px 16px;">+ New Resume</button>
+        <div id="cloudResumesList" style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 4px;">
+            <!-- Resume items will be rendered here dynamically -->
         </div>
     </div>
 
@@ -3073,68 +3232,407 @@ async function saveResume() {
     }
 }
 
-/* DJANGO API: FETCH RESUMES */
-async function fetchResumes() {
+/* RESUME MANAGER STATE & FUNCTIONS */
+let userResumes = [];
+let renamingResumeId = null;
+let deletingResumeId = null;
+
+async function fetchResumes(forceRefresh = false) {
     const listDiv = document.getElementById("cloudResumesList");
     if (!listDiv) return;
-    listDiv.innerHTML = "<p style='color:#a1a1aa; font-size: 14px;'>Loading...</p>";
 
-    try {
-        const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/my-resumes/`, {
-            method: "GET",
-            credentials: "include"
-        });
+    if (userResumes.length === 0 || forceRefresh) {
+        if (forceRefresh) {
+            listDiv.innerHTML = "<p style='color:#a1a1aa; font-size: 14px;'>Loading...</p>";
+        }
+        try {
+            const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/my-resumes/`, {
+                method: "GET",
+                credentials: "include"
+            });
 
-        if (response.ok) {
-            const data = await response.json();
-            if (data.length === 0) {
-                listDiv.innerHTML = "<p style='color:#a1a1aa; font-size: 14px;'>No resumes found.</p>";
+            if (response.ok) {
+                userResumes = await response.json();
+            } else if (response.status === 401 || response.status === 403) {
+                listDiv.innerHTML = "<p style='color:#ef4444; font-size: 14px;'>Please login to view resumes.</p>";
+                return;
+            } else {
+                listDiv.innerHTML = "<p style='color:#ef4444; font-size: 14px;'>Failed to load resumes.</p>";
                 return;
             }
-            
-            listDiv.innerHTML = ""; 
-            
-            data.forEach(r => {
-                const card = document.createElement("div");
-                card.className = "resume-card";
-                
-                const name = r.name || "Unnamed Resume";
-                const email = r.email || "No email";
-                let previewText = "No skills/projects listed.";
-                if (r.skills) {
-                    previewText = `Skills: ${r.skills}`;
-                } else if (r.projects && r.projects.length > 0) {
-                    previewText = `Projects: ${r.projects[0]}`;
-                }
-
-                card.innerHTML = `
-                    <div class="resume-card-header">
-                        <div>
-                            <div class="resume-card-title">${name}</div>
-                            <div class="resume-card-email">${email}</div>
-                        </div>
-                    </div>
-                    <div class="resume-card-preview">${previewText}</div>
-                `;
-                
-                const btn = document.createElement("button");
-                btn.className = "button-primary resume-card-btn";
-                btn.innerText = "Load";
-                btn.onclick = async () => {
-                    loadCloudResume(r);
-                    await syncWorkspaceState();
-                };
-                
-                card.appendChild(btn);
-                listDiv.appendChild(card);
-            });
-        } else if (response.status === 401 || response.status === 403) {
-            listDiv.innerHTML = "<p style='color:#ef4444; font-size: 14px;'>Please login to view resumes.</p>";
-        } else {
-            listDiv.innerHTML = "<p style='color:#ef4444; font-size: 14px;'>Failed to load resumes.</p>";
+        } catch (error) {
+            listDiv.innerHTML = "<p style='color:#ef4444; font-size: 14px;'>Server connection failed!</p>";
+            return;
         }
-    } catch (error) {
-        listDiv.innerHTML = "<p style='color:#ef4444; font-size: 14px;'>Server connection failed!</p>";
+    }
+    
+    renderResumeList();
+}
+
+function renderResumeList() {
+    const listDiv = document.getElementById("cloudResumesList");
+    if (!listDiv) return;
+    
+    if (userResumes.length === 0) {
+        listDiv.innerHTML = "<p style='color:#a1a1aa; font-size: 14px;'>No resumes found.</p>";
+        return;
+    }
+    
+    listDiv.innerHTML = "";
+    
+    userResumes.forEach(r => {
+        const item = document.createElement("div");
+        const isActive = (r.id === loadedResumeId);
+        item.className = `resume-manager-item ${isActive ? 'active' : ''}`;
+        
+        // Find template name
+        let templateName = "Harvard Resume";
+        if (r.template) {
+            const tempId = Number(r.template);
+            const matched = publicTemplates.find(t => Number(t.id) === tempId) || 
+                            myTemplates.find(mt => mt.template_details && Number(mt.template_details.id) === tempId);
+            if (matched) {
+                templateName = matched.template_details ? matched.template_details.name : matched.name;
+            }
+        }
+        
+        // Format mod date
+        const modDate = new Date(r.updated_at);
+        const formattedTime = modDate.toLocaleString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        const isRenaming = (r.id === renamingResumeId);
+        const isDeleting = (r.id === deletingResumeId);
+        
+        let headerContent = "";
+        if (isRenaming) {
+            headerContent = `
+                <div class="resume-manager-title-container">
+                    <input type="text" class="resume-manager-title-input" value="${escapeHTML(r.name)}" id="rename-input-${r.id}">
+                </div>
+            `;
+        } else {
+            headerContent = `
+                <div class="resume-manager-title-container">
+                    <span class="resume-manager-title" title="${escapeHTML(r.name)}">${escapeHTML(r.name)}</span>
+                    ${isActive ? `<span class="resume-manager-active-badge">Active</span>` : ''}
+                </div>
+            `;
+        }
+        
+        let detailsContent = `
+            <div class="resume-manager-details">
+                <div class="resume-manager-meta-row">
+                    <span class="resume-manager-meta-label">Modified:</span>
+                    <span>${formattedTime}</span>
+                </div>
+                <div class="resume-manager-meta-row">
+                    <span class="resume-manager-meta-label">Template:</span>
+                    <span>${escapeHTML(templateName)}</span>
+                </div>
+            </div>
+        `;
+        
+        let actionsContent = "";
+        if (isRenaming) {
+            actionsContent = `
+                <div class="resume-manager-actions">
+                    <button class="resume-manager-btn resume-manager-btn-primary" onclick="submitRename(${r.id})">Save</button>
+                    <button class="resume-manager-btn" onclick="cancelRename()">Cancel</button>
+                </div>
+            `;
+        } else if (isDeleting) {
+            actionsContent = `
+                <div class="resume-manager-confirm-box">
+                    <span style="font-size: 11px; color: #ef4444; font-weight: 500;">Confirm Delete?</span>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="resume-manager-btn resume-manager-btn-danger" onclick="deleteResume(${r.id})">Delete</button>
+                        <button class="resume-manager-btn" onclick="cancelDelete()">Cancel</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            actionsContent = `
+                <div class="resume-manager-actions">
+                    ${!isActive ? `<button class="resume-manager-btn resume-manager-btn-primary" onclick="switchResumeById(${r.id})">Open</button>` : ''}
+                    <button class="resume-manager-btn" onclick="enterRename(${r.id})">Rename</button>
+                    <button class="resume-manager-btn" onclick="duplicateResume(${r.id})">Duplicate</button>
+                    <button class="resume-manager-btn resume-manager-btn-danger" onclick="enterDelete(${r.id})">Delete</button>
+                </div>
+            `;
+        }
+        
+        item.innerHTML = headerContent + detailsContent + actionsContent;
+        listDiv.appendChild(item);
+        
+        // Auto-focus input if renaming
+        if (isRenaming) {
+            const input = document.getElementById(`rename-input-${r.id}`);
+            if (input) {
+                input.focus();
+                input.select();
+                input.onblur = (e) => {
+                    setTimeout(() => {
+                        if (renamingResumeId === r.id) {
+                            submitRename(r.id);
+                        }
+                    }, 200);
+                };
+                input.onkeydown = (e) => {
+                    if (e.key === "Enter") {
+                        submitRename(r.id);
+                    } else if (e.key === "Escape") {
+                        cancelRename();
+                    }
+                };
+            }
+        }
+    });
+}
+
+function enterRename(id) {
+    renamingResumeId = id;
+    deletingResumeId = null;
+    renderResumeList();
+}
+
+function cancelRename() {
+    renamingResumeId = null;
+    renderResumeList();
+}
+
+async function submitRename(id) {
+    const input = document.getElementById(`rename-input-${id}`);
+    if (!input) return;
+    const newName = input.value.trim();
+    if (!newName) {
+        showToast("Resume name cannot be empty", "error");
+        cancelRename();
+        return;
+    }
+    
+    const resume = userResumes.find(r => r.id === id);
+    const oldName = resume ? resume.name : "";
+    if (resume) {
+        resume.name = newName;
+    }
+    
+    renamingResumeId = null;
+    renderResumeList();
+    
+    try {
+        const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/save-resume/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: id, name: newName }),
+            credentials: "include"
+        });
+        
+        if (response.ok) {
+            showToast("Resume renamed successfully", "success");
+            if (id === loadedResumeId) {
+                originalData.name = newName;
+            }
+            const data = await response.json();
+            if (resume) {
+                resume.updated_at = data.updated_at;
+            }
+            userResumes.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+            renderResumeList();
+        } else {
+            showToast("Failed to rename resume", "error");
+            if (resume) resume.name = oldName;
+            fetchResumes(true);
+        }
+    } catch (e) {
+        showToast("Server connection failed", "error");
+        if (resume) resume.name = oldName;
+        fetchResumes(true);
+    }
+}
+
+function enterDelete(id) {
+    deletingResumeId = id;
+    renamingResumeId = null;
+    renderResumeList();
+}
+
+function cancelDelete() {
+    deletingResumeId = null;
+    renderResumeList();
+}
+
+async function deleteResume(id) {
+    deletingResumeId = null;
+    showToast("Deleting resume...", "info");
+    
+    try {
+        const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/delete-resume/${id}/`, {
+            method: "DELETE",
+            credentials: "include"
+        });
+        
+        if (response.ok) {
+            showToast("Resume deleted successfully", "success");
+            userResumes = userResumes.filter(r => r.id !== id);
+            
+            if (id === loadedResumeId) {
+                checkAuthStatus();
+            } else {
+                renderResumeList();
+            }
+        } else {
+            showToast("Failed to delete resume", "error");
+            fetchResumes(true);
+        }
+    } catch (e) {
+        showToast("Server connection failed", "error");
+        fetchResumes(true);
+    }
+}
+
+async function duplicateResume(id) {
+    showToast("Duplicating resume...", "info");
+    try {
+        const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/duplicate-resume/${id}/`, {
+            method: "POST",
+            credentials: "include"
+        });
+        if (response.ok) {
+            const data = await response.json();
+            showToast(`Duplicated to ${data.name}`, "success");
+            userResumes.unshift(data);
+            userResumes.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+            renderResumeList();
+        } else {
+            showToast("Failed to duplicate resume", "error");
+        }
+    } catch (e) {
+        showToast("Server connection failed", "error");
+    }
+}
+
+async function switchResumeById(id) {
+    const target = userResumes.find(r => r.id === id);
+    if (!target) return;
+    
+    if (isDirty) {
+        await autosaveResume();
+    }
+    
+    const loader = document.getElementById("workspace-loader");
+    if (loader) {
+        loader.style.display = "flex";
+        loader.style.opacity = "1";
+        const textEl = loader.querySelector('div:last-child');
+        if (textEl) textEl.innerText = "Switching Resume...";
+    }
+    
+    try {
+        const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/workspace/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                active_resume_id: id,
+                scroll_position: 0,
+                editor_state: {}
+            }),
+            credentials: "include"
+        });
+        
+        if (response.ok) {
+            const wsData = await response.json();
+            loadCloudResume(target);
+            
+            if (wsData.active_template_id) {
+                let template = publicTemplates.find(t => Number(t.id) === Number(wsData.active_template_id)) ||
+                               myTemplates.find(mt => mt.template_details && Number(mt.template_details.id) === Number(wsData.active_template_id));
+                if (template) {
+                    activeTemplate = template.template_details || template;
+                    const templateNameSpan = document.getElementById("currentTemplateName");
+                    if (templateNameSpan) templateNameSpan.innerText = activeTemplate.name;
+                    renderTemplates();
+                    renderMyTemplates();
+                }
+            } else {
+                activeTemplate = null;
+                const templateNameSpan = document.getElementById("currentTemplateName");
+                if (templateNameSpan) templateNameSpan.innerText = "Harvard Resume";
+            }
+            updateLatex();
+            renderResumeList();
+        } else {
+            showToast("Failed to sync workspace change", "error");
+        }
+    } catch (e) {
+        showToast("Failed to switch resume", "error");
+    } finally {
+        if (loader) {
+            loader.style.opacity = "0";
+            setTimeout(() => { loader.style.display = "none"; }, 300);
+        }
+    }
+}
+
+async function createNewResumeWorkflow() {
+    if (isDirty) {
+        await autosaveResume();
+    }
+    
+    const loader = document.getElementById("workspace-loader");
+    if (loader) {
+        loader.style.display = "flex";
+        loader.style.opacity = "1";
+        const textEl = loader.querySelector('div:last-child');
+        if (textEl) textEl.innerText = "Creating Resume...";
+    }
+    
+    try {
+        const response = await fetch(`${CONFIG.DJANGO_BASE_URL}/api/save-resume/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({}),
+            credentials: "include"
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            showToast(`Created ${data.name}`, "success");
+            
+            await fetch(`${CONFIG.DJANGO_BASE_URL}/api/workspace/`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    active_resume_id: data.id,
+                    scroll_position: 0,
+                    editor_state: {}
+                }),
+                credentials: "include"
+            });
+            
+            userResumes.unshift(data);
+            loadCloudResume(data);
+            
+            activeTemplate = null;
+            const templateNameSpan = document.getElementById("currentTemplateName");
+            if (templateNameSpan) templateNameSpan.innerText = "Harvard Resume";
+            
+            updateLatex();
+            renderResumeList();
+        } else {
+            showToast("Failed to create new resume", "error");
+        }
+    } catch (e) {
+        showToast("Server connection failed", "error");
+    } finally {
+        if (loader) {
+            loader.style.opacity = "0";
+            setTimeout(() => { loader.style.display = "none"; }, 300);
+        }
     }
 }
 
@@ -3209,6 +3707,7 @@ async function checkAuthStatus() {
                 
                 if (resumesResponse.ok) {
                     const resumesData = await resumesResponse.json();
+                    userResumes = resumesData;
                     
                     let targetResume = null;
                     if (activeResumeId) {
@@ -3225,7 +3724,7 @@ async function checkAuthStatus() {
                                 if (myTemp) template = myTemp.template_details;
                             }
                             if (template) {
-                                activeTemplate = template;
+                                activeTemplate = template.template_details || template;
                                 const templateNameSpan = document.getElementById("currentTemplateName");
                                 if (templateNameSpan) templateNameSpan.innerText = template.name;
                                 renderTemplates();
@@ -3246,6 +3745,8 @@ async function checkAuthStatus() {
                     } else {
                         fallbackToMostRecentOrEmpty(resumesData);
                     }
+                    
+                    fetchResumes();
                 } else {
                     fallbackToMostRecentOrEmpty([]);
                 }
@@ -3267,11 +3768,13 @@ async function checkAuthStatus() {
 function fallbackToMostRecentOrEmpty(resumesData) {
     const mainView = document.querySelector(".main");
     const emptyState = document.getElementById("empty-state-view");
+    userResumes = resumesData;
     
     if (resumesData && resumesData.length > 0) {
         const recent = resumesData[0];
         loadCloudResume(recent);
         syncWorkspaceState();
+        fetchResumes();
     } else {
         if (mainView) mainView.style.display = "none";
         if (emptyState) emptyState.style.display = "flex";
